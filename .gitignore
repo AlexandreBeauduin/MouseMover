@@ -1,0 +1,6 @@
+build/
+*.xcodeproj
+Sources/MouseMover/Info.plist
+.DS_Store
+xcuserdata/
+DerivedData/
