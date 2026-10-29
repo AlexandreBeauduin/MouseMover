@@ -35,7 +35,7 @@ struct MouseMoverApp: App {
         MenuBarExtra {
             MenuContent(controller: controller)
         } label: {
-            Text(controller.statusTitle)
+            StatusLabel(controller: controller, countdown: controller.countdown)
         }
         .menuBarExtraStyle(.menu)
     }
@@ -62,5 +62,15 @@ struct MouseMoverApp: App {
         let others = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
             .filter { $0 != NSRunningApplication.current }
         if !others.isEmpty { exit(0) }
+    }
+}
+
+/// Titre de la barre de menus : seul element qui observe le compte a rebours.
+struct StatusLabel: View {
+    @ObservedObject var controller: MouseMoverController
+    @ObservedObject var countdown: CountdownState
+
+    var body: some View {
+        Text(controller.statusTitle)
     }
 }

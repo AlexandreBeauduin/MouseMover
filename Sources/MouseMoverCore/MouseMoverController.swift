@@ -21,6 +21,17 @@ public final class SystemCycleRunner: CycleRunning {
     }
 }
 
+/// Compte a rebours isole du reste de l'etat : il change chaque seconde et ne doit rafraichir que le titre
+/// de la barre de menus, jamais le menu ouvert (sinon les sous-menus se referment).
+@MainActor
+public final class CountdownState: ObservableObject {
+    @Published public var remaining: Int
+
+    public init(remaining: Int) {
+        self.remaining = remaining
+    }
+}
+
 @MainActor
 public final class MouseMoverController: ObservableObject {
     public static let intervalPresets: [(label: String, seconds: Int)] = [
@@ -30,7 +41,7 @@ public final class MouseMoverController: ObservableObject {
     public static let shared = MouseMoverController()
 
     @Published public private(set) var isRunning = false
-    @Published public private(set) var remaining: Int
+    public let countdown: CountdownState
     @Published public private(set) var interval: Int
     @Published public private(set) var selectedDisplayID: UInt32?
     @Published public private(set) var displays: [DisplayInfo]
@@ -60,11 +71,16 @@ public final class MouseMoverController: ObservableObject {
         self.accessibilityCheck = accessibilityCheck
 
         self.interval = config.intervalSeconds
-        self.remaining = config.intervalSeconds
+        self.countdown = CountdownState(remaining: config.intervalSeconds)
         self.selectedDisplayID = config.displayID
         self.displays = displayProvider.activeDisplays()
         self.launchAtLoginEnabled = loginItem.isEnabled
         self.accessibilityTrusted = accessibilityCheck()
+    }
+
+    public var remaining: Int {
+        get { countdown.remaining }
+        set { countdown.remaining = newValue }
     }
 
     // MARK: - Etat affiche
@@ -96,7 +112,8 @@ public final class MouseMoverController: ObservableObject {
     }
 
     public func tick() {
-        accessibilityTrusted = accessibilityCheck()
+        let trusted = accessibilityCheck()
+        if trusted != accessibilityTrusted { accessibilityTrusted = trusted }
 
         guard isRunning, !isBusy else { return }
 
@@ -157,7 +174,8 @@ public final class MouseMoverController: ObservableObject {
     }
 
     public func refreshDisplays() {
-        displays = displayProvider.activeDisplays()
+        let current = displayProvider.activeDisplays()
+        if current != displays { displays = current }
     }
 
     public func setLaunchAtLogin(_ enabled: Bool) -> Result<Void, LoginItemError> {
@@ -177,7 +195,8 @@ public final class MouseMoverController: ObservableObject {
     }
 
     public func refreshLaunchAtLogin() {
-        launchAtLoginEnabled = loginItem.isEnabled
+        let enabled = loginItem.isEnabled
+        if enabled != launchAtLoginEnabled { launchAtLoginEnabled = enabled }
     }
 
     // MARK: - Interne
@@ -187,7 +206,7 @@ public final class MouseMoverController: ObservableObject {
         guard !isBusy else { return false }
 
         let current = displayProvider.activeDisplays()
-        displays = current
+        if current != displays { displays = current }
         guard let target = DisplayCatalog.resolve(selected: selectedDisplayID, in: current) else {
             Log.core.error("Aucun ecran actif, cycle ignore.")
             return false

@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import MouseMoverCore
 
@@ -106,6 +107,42 @@ final class ControllerTests: XCTestCase {
         c.toggle()
         XCTAssertTrue(c.isRunning)
         XCTAssertEqual(c.remaining, 10)
+    }
+
+    // MARK: Stabilite du menu
+
+    /// Un menu ouvert est reconstruit a chaque notification : le timer ne doit rien publier sur le controleur.
+    func testTickDoesNotNotifyMenuObservers() {
+        let c = makeController(config: MouseMoverConfig(intervalSeconds: 100))
+        var notifications = 0
+        let cancellable = c.objectWillChange.sink { notifications += 1 }
+        tick(c, 5)          // en pause
+        c.start()
+        let afterStart = notifications
+        tick(c, 5)          // en marche : seul le compte a rebours change
+        XCTAssertEqual(notifications, afterStart)
+        XCTAssertEqual(c.remaining, 95)
+        cancellable.cancel()
+    }
+
+    func testCountdownPublishesOnItsOwnObject() {
+        let c = makeController(config: MouseMoverConfig(intervalSeconds: 100))
+        c.start()
+        var notifications = 0
+        let cancellable = c.countdown.objectWillChange.sink { notifications += 1 }
+        tick(c, 3)
+        XCTAssertEqual(notifications, 3)
+        cancellable.cancel()
+    }
+
+    func testRefreshesWithoutChangeDoNotNotify() {
+        let c = makeController()
+        var notifications = 0
+        let cancellable = c.objectWillChange.sink { notifications += 1 }
+        c.refreshDisplays()
+        c.refreshLaunchAtLogin()
+        XCTAssertEqual(notifications, 0)
+        cancellable.cancel()
     }
 
     // MARK: Executer maintenant
