@@ -15,6 +15,7 @@ struct MouseMoverApp: App {
 
         let controller = MouseMoverController.shared
         controller.startTimer()
+        AccessibilityPermission.requestPromptOnce()
 
         // La migration du LaunchAgent Python n'a de sens que pour l'app installee.
         if Bundle.main.bundlePath.hasPrefix("/Applications/") {
@@ -47,6 +48,7 @@ struct MouseMoverApp: App {
 
     private static func runSelfTestAndExit(outputPath: String) -> Never {
         let report = SelfTest.run()
+        if !report.accessibilityTrusted { AccessibilityPermission.requestPrompt() }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         if let data = try? encoder.encode(report) {
