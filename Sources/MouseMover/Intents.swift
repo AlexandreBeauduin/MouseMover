@@ -144,9 +144,11 @@ struct MouseMoverShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: StartMouseMoverIntent(),
             phrases: [
+                // Pas de « Lance » / « Ouvre » : Siri les prend pour « ouvrir l'application ».
+                "Démarre le mouvement de souris avec \(.applicationName)",
+                "Active le mouvement de souris de \(.applicationName)",
+                "Mets \(.applicationName) en marche",
                 "Démarre \(.applicationName)",
-                "Lance \(.applicationName)",
-                "Active \(.applicationName)",
             ],
             shortTitle: "Démarrer",
             systemImageName: "play.fill")
@@ -154,9 +156,10 @@ struct MouseMoverShortcuts: AppShortcutsProvider {
         AppShortcut(
             intent: StopMouseMoverIntent(),
             phrases: [
-                "Arrête \(.applicationName)",
+                "Arrête le mouvement de souris de \(.applicationName)",
                 "Mets \(.applicationName) en pause",
                 "Désactive \(.applicationName)",
+                "Arrête \(.applicationName)",
             ],
             shortTitle: "Arrêter",
             systemImageName: "pause.fill")
