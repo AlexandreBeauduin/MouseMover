@@ -1,6 +1,7 @@
 import AppIntents
 import Combine
 import CoreSpotlight
+import os
 import MouseMoverCore
 
 // Siri AI (macOS 27) n'exécute que les intents qui adoptent un schéma d'app (voir
@@ -104,9 +105,17 @@ enum MouseMoverTimerIndexer {
             .sink { _, _ in Task { try? await donate() } }
     }
 
+    private static let logger = Logger(subsystem: "com.pudeldoodle.MouseMoverApp", category: "spotlight")
+
     static func donate() async throws {
-        try await CSSearchableIndex(name: "MouseMoverTimer")
-            .indexAppEntities([MouseMoverTimerEntity.current()])
+        do {
+            try await CSSearchableIndex(name: "MouseMoverTimer")
+                .indexAppEntities([MouseMoverTimerEntity.current()])
+            logger.notice("Minuteur indexé dans Spotlight")
+        } catch {
+            logger.error("Indexation Spotlight échouée : \(String(describing: error), privacy: .public)")
+            throw error
+        }
     }
 }
 
