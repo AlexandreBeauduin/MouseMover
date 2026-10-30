@@ -15,6 +15,7 @@ struct MouseMoverApp: App {
 
         let controller = MouseMoverController.shared
         controller.startTimer()
+        if #available(macOS 27.0, *) { MouseMoverTimerIndexer.start() }
         AccessibilityPermission.requestPromptOnce()
 
         // La migration du LaunchAgent Python n'a de sens que pour l'app installee.

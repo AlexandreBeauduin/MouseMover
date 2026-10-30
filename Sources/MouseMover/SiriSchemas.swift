@@ -1,4 +1,6 @@
 import AppIntents
+import Combine
+import CoreSpotlight
 import MouseMoverCore
 
 // Siri AI (macOS 27) n'exécute que les intents qui adoptent un schéma d'app (voir
@@ -25,7 +27,7 @@ enum MouseMoverTimerState: String {
 
 @available(macOS 27.0, *)
 @AppEntity(schema: .clock.timer)
-struct MouseMoverTimerEntity {
+struct MouseMoverTimerEntity: IndexedEntity {
     static let timerID = "mousemover"
     static let defaultQuery = MouseMoverTimerQuery()
 
@@ -62,10 +64,19 @@ struct MouseMoverTimerEntity {
             timerState: state)
     }
 
-    struct MouseMoverTimerQuery: EntityStringQuery {
+    struct MouseMoverTimerQuery: EntityStringQuery, IndexedEntityQuery {
         func entities(for identifiers: [MouseMoverTimerEntity.ID]) async throws -> [MouseMoverTimerEntity] {
             guard identifiers.contains(MouseMoverTimerEntity.timerID) else { return [] }
             return [await MainActor.run { MouseMoverTimerEntity.current() }]
+        }
+
+        func reindexEntities(for identifiers: [MouseMoverTimerEntity.ID],
+                             indexDescription: CSSearchableIndexDescription) async throws {
+            try await MouseMoverTimerIndexer.donate()
+        }
+
+        func reindexAllEntities(indexDescription: CSSearchableIndexDescription) async throws {
+            try await MouseMoverTimerIndexer.donate()
         }
 
         func entities(matching string: String) async throws -> [MouseMoverTimerEntity] {
@@ -76,6 +87,26 @@ struct MouseMoverTimerEntity {
         func suggestedEntities() async throws -> [MouseMoverTimerEntity] {
             [await MainActor.run { MouseMoverTimerEntity.current() }]
         }
+    }
+}
+
+/// Siri retrouve les entités via l'index Spotlight : on y dépose l'état courant du minuteur
+/// au lancement puis à chaque changement (actif / en pause / intervalle).
+@available(macOS 27.0, *)
+@MainActor
+enum MouseMoverTimerIndexer {
+    private static var observation: AnyCancellable?
+
+    static func start() {
+        let controller = MouseMoverController.shared
+        observation = Publishers.CombineLatest(controller.$isRunning, controller.$interval)
+            .removeDuplicates { $0 == $1 }
+            .sink { _, _ in Task { try? await donate() } }
+    }
+
+    static func donate() async throws {
+        try await CSSearchableIndex(name: "MouseMoverTimer")
+            .indexAppEntities([MouseMoverTimerEntity.current()])
     }
 }
 
