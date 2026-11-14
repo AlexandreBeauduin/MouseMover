@@ -15,6 +15,8 @@ statut « actif ».
 
 ## Fonctionnalités
 
+![Menu de MouseMover](docs/images/menu.png)
+
 - **Démarrer / Arrêter**, **Exécuter maintenant**, compte à rebours jusqu'au prochain cycle
   dans la barre des menus.
 - Intervalle : 1, 3, 5, 10, 15 minutes ou personnalisé.

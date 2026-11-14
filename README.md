@@ -14,6 +14,8 @@ draw or record yourself, to keep the session awake and your status "active".
 
 ## Features
 
+![MouseMover menu](docs/images/menu.png)
+
 - **Start / Stop**, **Run now**, countdown to the next cycle in the menu bar.
 - Interval: 1, 3, 5, 10, 15 minutes or custom.
 - **Patterns**: four built-in ones (*Classic*, *Discreet*, *Circle*, *Zigzag*) and your own:

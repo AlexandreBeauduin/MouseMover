@@ -14,6 +14,8 @@ zelf kunt tekenen of opnemen, zodat je sessie wakker blijft en je status "actief
 
 ## Functies
 
+![Menu van MouseMover](docs/images/menu.png)
+
 - **Starten / Stoppen**, **Nu uitvoeren**, aftelling tot de volgende cyclus in de menubalk.
 - Interval: 1, 3, 5, 10, 15 minuten of aangepast.
 - **Patronen**: vier ingebouwde (*Klassiek*, *Discreet*, *Cirkel*, *Zigzag*) en je eigen:

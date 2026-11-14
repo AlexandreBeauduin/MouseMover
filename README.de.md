@@ -15,6 +15,8 @@ Status „aktiv“ bleibt.
 
 ## Funktionen
 
+![Menü von MouseMover](docs/images/menu.png)
+
 - **Starten / Stoppen**, **Jetzt ausführen**, Countdown bis zum nächsten Zyklus in der Menüleiste.
 - Intervall: 1, 3, 5, 10, 15 Minuten oder eigener Wert.
 - **Muster**: vier integrierte (*Klassisch*, *Dezent*, *Kreis*, *Zickzack*) und deine eigenen:
