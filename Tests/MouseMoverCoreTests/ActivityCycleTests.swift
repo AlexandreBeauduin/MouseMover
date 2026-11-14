@@ -31,16 +31,16 @@ final class ActivityCycleTests: XCTestCase {
         let (cycle, driver, _) = makeCycle()
         XCTAssertEqual(cycle.run(on: Fixtures.main), .completed)
 
-        // Jitter minimal (1) => decalage de -1 sur chaque axe.
+        // Minimal jitter (1) => offset of -1 on each axis.
         let jitter = Point(x: -1, y: -1)
         func p(_ x: Int, _ y: Int) -> Point { Point(x: x + jitter.x, y: y + jitter.y) }
         XCTAssertEqual(driver.moves, [
-            p(1599, 899),          // centre
-            p(80, 1719),           // coin bas gauche (ordre non melange)
+            p(1599, 899),          // center
+            p(80, 1719),           // bottom left corner (order not shuffled)
             p(80, 80),
             p(3119, 80),
             p(3119, 1719),
-            p(1599, 899),          // retour au centre
+            p(1599, 899),          // back to the center
         ])
         XCTAssertEqual(driver.clickCount, 1)
     }
@@ -116,7 +116,7 @@ final class ActivityCycleTests: XCTestCase {
     func testCycleOnNegativeOriginDisplayStaysInsideIt() {
         for display in [Fixtures.left, Fixtures.upperLeft] {
             let (cycle, driver, random) = makeCycle()
-            random.intValue = 4 // jitter maximal
+            random.intValue = 4 // maximal jitter
             XCTAssertEqual(cycle.run(on: display), .completed)
             let b = display.bounds
             for point in driver.moves {

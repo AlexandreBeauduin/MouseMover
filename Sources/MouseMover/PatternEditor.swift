@@ -3,8 +3,8 @@ import Combine
 import MouseMoverCore
 import SwiftUI
 
-/// Fenetre « Motifs de souris ». Fenetre AppKit plutot qu'une scene `Window` : sur macOS 14,
-/// une scene peut s'ouvrir toute seule au lancement d'une app de barre de menus.
+/// "Mouse patterns" window. An AppKit window rather than a `Window` scene: on macOS 14 a scene
+/// can open by itself when a menu bar app launches.
 @MainActor
 final class PatternEditorWindow {
     static let shared = PatternEditorWindow()
@@ -38,7 +38,7 @@ final class PatternEditorWindow {
         window.contentView = hosting
         window.center()
         window.setFrameAutosaveName("PatternEditor")
-        // Pendant un cycle la souris traverse l'ecran (et clique parfois) : la fenetre ne doit pas reagir.
+        // During a cycle the mouse crosses the screen (and sometimes clicks): the window must not react.
         controller.$isBusy.sink { [weak window] busy in
             window?.ignoresMouseEvents = busy
         }.store(in: &observers)
@@ -56,7 +56,7 @@ final class PatternEditorModel: ObservableObject {
     @Published var selectedID: String? = MousePattern.classic.id
 }
 
-// MARK: - Fenetre
+// MARK: - Window
 
 struct PatternEditorView: View {
     @ObservedObject var controller: MouseMoverController
@@ -160,7 +160,7 @@ struct PatternEditorView: View {
     }
 }
 
-// MARK: - Detail d'un motif
+// MARK: - Pattern detail
 
 struct PatternDetailView: View {
     @ObservedObject var controller: MouseMoverController
@@ -209,7 +209,7 @@ struct PatternDetailView: View {
         .onDisappear { flushSave() }
     }
 
-    // MARK: En-tete
+    // MARK: Header
 
     private var header: some View {
         HStack(spacing: 10) {
@@ -288,7 +288,7 @@ struct PatternDetailView: View {
         return CGFloat(display.width) / CGFloat(display.height)
     }
 
-    // MARK: Inspecteur du point
+    // MARK: Point inspector
 
     @ViewBuilder
     private var inspector: some View {
@@ -325,7 +325,7 @@ struct PatternDetailView: View {
         selection = draft.points.isEmpty ? nil : min(index, draft.points.count - 1)
     }
 
-    // MARK: Sauvegarde et capture
+    // MARK: Saving and capture
 
     private func scheduleSave(_ pattern: MousePattern) {
         guard !pattern.isBuiltIn else { return }
@@ -363,7 +363,7 @@ struct PatternDetailView: View {
     }
 }
 
-// MARK: - Cadre de dessin
+// MARK: - Canvas
 
 struct PatternCanvas: View {
     @Binding var points: [PatternPoint]
@@ -372,7 +372,7 @@ struct PatternCanvas: View {
     let aspectRatio: CGFloat
     let editable: Bool
 
-    /// Appui en cours sur une poignee : point vise, et si le geste est un simple clic ou un glisser.
+    /// Ongoing press on a handle: the target point, and whether the gesture is a plain click or a drag.
     private struct Press {
         var target: Int
         var wasSelected: Bool
@@ -467,7 +467,7 @@ struct PatternCanvas: View {
             DragGesture(minimumDistance: 0, coordinateSpace: .named("canvas"))
                 .onChanged { value in
                     if press == nil {
-                        // Sur une pile de points, on garde le point deja selectionne s'il en fait partie.
+                        // On a stack of points, keep the selected point if it belongs to the stack.
                         let target = selection.flatMap { stack.contains($0) ? $0 : nil } ?? index
                         press = Press(target: target, wasSelected: selection == target, moved: false, stack: stack)
                         selection = target
@@ -481,7 +481,7 @@ struct PatternCanvas: View {
                 }
                 .onEnded { _ in
                     defer { press = nil }
-                    // Un clic sur un point deja selectionne d'une pile passe au point suivant de la pile.
+                    // Clicking the selected point of a stack moves on to the next point of the stack.
                     guard let current = press, !current.moved, current.wasSelected, current.stack.count > 1,
                           let position = current.stack.firstIndex(of: current.target) else { return }
                     selection = current.stack[(position + 1) % current.stack.count]
@@ -489,7 +489,7 @@ struct PatternCanvas: View {
         .help(help(for: index, stack: stack))
     }
 
-    /// Les points dont la poignee recouvre celle de `index` (lui compris), dans l'ordre de jeu.
+    /// Points whose handle overlaps the handle of `index` (itself included), in playing order.
     private func overlapping(_ index: Int, in size: CGSize) -> [Int] {
         let center = Self.location(of: points[index], in: size)
         let limit = diameter * 0.75
@@ -525,7 +525,7 @@ struct PatternCanvas: View {
     }
 }
 
-// MARK: - Inspecteur
+// MARK: - Inspector
 
 struct PointInspector: View {
     @Binding var point: PatternPoint
@@ -546,7 +546,7 @@ struct PointInspector: View {
         }
     }
 
-    /// Passe d'un point a l'autre sans toucher au cadre (utile quand des points se superposent).
+    /// Moves from point to point without touching the canvas (handy when points overlap).
     private var navigation: some View {
         HStack {
             Button { select(index - 1) } label: { Image(systemName: "chevron.left") }

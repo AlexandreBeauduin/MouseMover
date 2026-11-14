@@ -1,11 +1,11 @@
 import Foundation
 
-/// Une position du curseur relevee pendant l'enregistrement d'un geste.
+/// A cursor position sampled while recording a gesture.
 public struct GestureSample: Equatable, Sendable {
-    /// Secondes depuis le debut de l'enregistrement.
+    /// Seconds since the recording started.
     public var time: Double
     public var point: Point
-    /// Un clic gauche a eu lieu a cet instant.
+    /// A left click happened at this moment.
     public var click: Bool
 
     public init(time: Double, point: Point, click: Bool = false) {
@@ -15,13 +15,13 @@ public struct GestureSample: Equatable, Sendable {
     }
 }
 
-/// Transforme un geste enregistre en motif : arrets, clics et rythme conserves, trajet simplifie.
+/// Turns a recorded gesture into a pattern: stops, clicks and rhythm are kept, the path is simplified.
 public enum GestureRecorder {
-    /// En dessous (fraction de l'ecran), le curseur est considere immobile.
+    /// Below this (fraction of the display), the cursor is considered still.
     static let stillness = 0.0015
-    /// Un arret au moins aussi long devient une pause du motif.
+    /// A stop at least this long becomes a pause in the pattern.
     static let minimumPause = 0.2
-    /// Ecart toleré entre le trajet reel et le trajet simplifie (fraction de l'ecran).
+    /// Allowed gap between the real path and the simplified path (fraction of the display).
     static let tolerance = 0.004
 
     struct Node: Equatable {
@@ -36,7 +36,7 @@ public enum GestureRecorder {
                                name: String = L10n.recordedGesture) -> MousePattern? {
         var nodes = group(samples, in: bounds)
         guard !nodes.isEmpty else { return nil }
-        // L'attente avant le premier mouvement et apres le dernier ne fait pas partie du geste.
+        // Waiting before the first move and after the last one is not part of the gesture.
         nodes[0].start = nodes[0].end
         nodes[nodes.count - 1].end = nodes[nodes.count - 1].start
 
@@ -66,7 +66,7 @@ public enum GestureRecorder {
         return MousePattern(name: name, points: points).sanitized()
     }
 
-    /// Regroupe les releves successifs presque immobiles en un seul noeud (avec sa duree d'arret).
+    /// Merges consecutive, nearly still samples into a single node (with its stop duration).
     static func group(_ samples: [GestureSample], in bounds: DisplayBounds) -> [Node] {
         let width = Double(max(bounds.maxX - bounds.minX, 1))
         let height = Double(max(bounds.maxY - bounds.minY, 1))
@@ -86,7 +86,7 @@ public enum GestureRecorder {
         return nodes
     }
 
-    /// Douglas-Peucker entre les noeuds incontournables (debut, fin, clics, pauses).
+    /// Douglas-Peucker between the nodes that must stay (start, end, clicks, pauses).
     static func simplify(_ nodes: [Node], epsilon: Double) -> [Node] {
         guard nodes.count > 2 else { return nodes }
         let anchors = nodes.indices.filter { index in

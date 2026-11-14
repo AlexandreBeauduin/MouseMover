@@ -4,13 +4,13 @@ import Foundation
 public enum AccessibilityPermission {
     private static let promptedKey = "accessibilityPromptShown"
 
-    /// Affiche la demande systeme d'Accessibilite (ajoute l'app a la liste des Reglages).
+    /// Shows the system Accessibility prompt (adds the app to the list in System Settings).
     public static func requestPrompt() {
         let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
     }
 
-    /// Demande l'autorisation une seule fois, au premier lancement sans permission.
+    /// Asks only once, on the first launch without the permission.
     public static func requestPromptOnce(defaults: UserDefaults = .standard,
                                          isTrusted: () -> Bool = { AXIsProcessTrusted() },
                                          prompt: () -> Void = AccessibilityPermission.requestPrompt) {

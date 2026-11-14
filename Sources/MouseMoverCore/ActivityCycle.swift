@@ -1,7 +1,7 @@
 import Foundation
 
-/// Un cycle d'activite souris sur un ecran : joue un motif, par defaut le motif « Classique »
-/// (centre, clic, quatre coins dans un ordre aleatoire, retour au centre).
+/// One mouse activity cycle on a display: plays a pattern, by default the "Classic" one
+/// (center, click, the four corners in random order, back to the center).
 public struct ActivityCycle {
     public static let safeMargin = 80
 
@@ -25,8 +25,8 @@ public struct ActivityCycle {
             y: max(bounds.minY + safeMargin, min(point.y, bounds.maxY - safeMargin)))
     }
 
-    /// Position reelle d'un point du motif. Ecran : (0, 0) est le coin haut gauche, (1, 1) le coin bas droit.
-    /// Curseur : (0.5, 0.5) est la position du curseur, l'echelle reste celle de l'ecran.
+    /// Actual position of a pattern point. Display: (0, 0) is the top left corner, (1, 1) the bottom right.
+    /// Cursor: (0.5, 0.5) is the cursor position; the scale is still the display's.
     public static func locate(_ point: PatternPoint, in bounds: DisplayBounds, origin: Point?) -> Point {
         let width = Double(bounds.maxX - bounds.minX)
         let height = Double(bounds.maxY - bounds.minY)
@@ -42,8 +42,8 @@ public struct ActivityCycle {
         run(.classic, on: display)
     }
 
-    /// Ne leve jamais d'erreur : le failsafe ou toute autre erreur interrompt simplement le cycle.
-    /// `displays` sert au repere « curseur » : on reste sur l'ecran ou se trouve le curseur.
+    /// Never throws: the fail-safe or any other error simply stops the cycle.
+    /// `displays` is used by the cursor frame: the cycle stays on the display under the cursor.
     public func run(_ pattern: MousePattern, on display: DisplayInfo, displays: [DisplayInfo] = []) -> Outcome {
         var bounds = display.bounds
         var origin: Point?
@@ -57,7 +57,7 @@ public struct ActivityCycle {
             }
         }
 
-        // Melange au premier point mobile (et non avant) : meme suite de tirages que la version Python.
+        // Shuffle at the first movable point (not before): same random draws as the Python version.
         var order: [PatternPoint]? = pattern.shuffle ? nil : pattern.points
         do {
             for index in pattern.points.indices {
@@ -72,15 +72,15 @@ public struct ActivityCycle {
             }
             return .completed
         } catch MouseError.failSafeTriggered {
-            Log.core.notice("Failsafe declenche (souris dans un coin), cycle ignore.")
+            Log.core.notice("Fail-safe triggered (mouse in a corner), cycle skipped.")
             return .failSafe
         } catch {
-            Log.core.error("Erreur pendant le cycle d'activite (ignoree): \(String(describing: error))")
+            Log.core.error("Error during the activity cycle (ignored): \(String(describing: error))")
             return .failed
         }
     }
 
-    /// Sans duree imposee : leger decalage, duree et courbe aleatoires. Avec une duree : trajet exact et lineaire.
+    /// Without a set duration: slight offset, random duration and curve. With one: exact, linear path.
     func humanMove(to target: Point, duration: Double? = nil) throws {
         if let duration {
             try driver.glide(to: target, duration: duration)

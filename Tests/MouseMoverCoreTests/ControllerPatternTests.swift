@@ -60,7 +60,7 @@ final class ControllerPatternTests: XCTestCase {
         c.togglePattern("builtin.zigzag")
         c.togglePattern("builtin.discreet")
         XCTAssertEqual(c.selectedPatternIDs, ["builtin.classic", "builtin.zigzag", "builtin.discreet"])
-        // Ordre de la liste, pas l'ordre des clics.
+        // List order, not click order.
         XCTAssertEqual(runCycles(c, 4), ["builtin.classic", "builtin.discreet", "builtin.zigzag", "builtin.classic"])
         XCTAssertEqual(saved.patternMode, .sequence)
     }
@@ -177,7 +177,7 @@ final class ControllerPatternTests: XCTestCase {
         var calls = 0
         c.onPatternsChanged = { calls += 1 }
         c.savePattern(custom)
-        c.savePattern(custom) // inchange : pas de notification
+        c.savePattern(custom) // unchanged: no notification
         c.deletePattern("perso")
         XCTAssertEqual(calls, 2)
     }

@@ -2,8 +2,8 @@ import AppKit
 import MouseMoverCore
 import SwiftUI
 
-/// Enregistre un geste de l'utilisateur : compte a rebours, puis position du curseur a 60 Hz et clics,
-/// jusqu'a la fin du temps choisi ou la touche Echap. Un bandeau flottant indique ou on en est.
+/// Records a user gesture: a countdown, then the cursor position at 60 Hz and the clicks, until the
+/// chosen time runs out or Escape is pressed. A floating banner shows the progress.
 @MainActor
 final class GestureCapture {
     static let shared = GestureCapture()
@@ -23,7 +23,7 @@ final class GestureCapture {
 
     var isActive: Bool { completion != nil }
 
-    /// `completion` recoit `nil` si l'utilisateur annule pendant le compte a rebours.
+    /// `completion` receives `nil` if the user cancels during the countdown.
     func start(seconds: Int, completion: @escaping (MousePattern?) -> Void) {
         guard !isActive else { return }
         self.completion = completion
@@ -108,7 +108,7 @@ final class GestureCapture {
         return Point(x: Int(location.x.rounded()), y: Int(location.y.rounded()))
     }
 
-    // MARK: Evenements
+    // MARK: Events
 
     private func installKeyMonitors() {
         let escapeKeyCode: UInt16 = 53
@@ -141,7 +141,7 @@ final class GestureCapture {
         }
     }
 
-    // MARK: Bandeau
+    // MARK: Banner
 
     private func showPanel() {
         let panel = self.panel ?? makePanel()

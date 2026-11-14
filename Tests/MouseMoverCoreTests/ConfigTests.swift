@@ -67,7 +67,7 @@ final class ConfigTests: XCTestCase {
         let url = Fixtures.tempURL()
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try Data("pas du json".utf8).write(to: url)
+        try Data("not json".utf8).write(to: url)
         XCTAssertEqual(ConfigStore(url: url).load(), MouseMoverConfig())
     }
 

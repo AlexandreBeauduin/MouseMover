@@ -3,7 +3,7 @@ import XCTest
 
 final class CGMouseDriverTests: XCTestCase {
     func testFailSafeCheckOnlyTriggersAtOrigin() {
-        // Ne deplace pas la souris : on verifie juste la logique de position.
+        // Does not move the mouse: only checks the position logic.
         let driver = CGMouseDriver()
         let origin = driver.position() == Point(x: 0, y: 0)
         if origin {

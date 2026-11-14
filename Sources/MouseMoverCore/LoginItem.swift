@@ -34,7 +34,7 @@ public struct SystemLoginItem: LoginItemManaging {
     }
 }
 
-/// Migre l'ancien LaunchAgent de la version Python vers un element de connexion natif.
+/// Migrates the LaunchAgent of the former Python version to a native login item.
 public struct LegacyLaunchAgentMigrator {
     public static var defaultPlistURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
@@ -53,14 +53,14 @@ public struct LegacyLaunchAgentMigrator {
         self.unload = unload
     }
 
-    /// Renvoie `true` si l'ancien LaunchAgent a ete remplace. Ne touche a rien si l'enregistrement echoue.
+    /// Returns `true` if the old LaunchAgent was replaced. Touches nothing if registration fails.
     @discardableResult
     public func migrateIfNeeded() -> Bool {
         guard FileManager.default.fileExists(atPath: plistURL.path) else { return false }
         do {
             try loginItem.setEnabled(true)
         } catch {
-            Log.core.error("Migration du LaunchAgent impossible: \(String(describing: error))")
+            Log.core.error("Could not migrate the LaunchAgent: \(String(describing: error))")
             return false
         }
         unload(plistURL)

@@ -4,8 +4,8 @@ import Foundation
 
 @MainActor
 public protocol CycleRunning: AnyObject {
-    /// Joue `pattern` sur l'ecran donne puis appelle `completion` (sur le main actor) une fois termine.
-    /// `displays` (tous les ecrans actifs) sert aux motifs centres sur le curseur.
+    /// Plays `pattern` on the given display, then calls `completion` (on the main actor) when done.
+    /// `displays` (all active displays) is used by cursor-centered patterns.
     func runCycle(_ pattern: MousePattern, on display: DisplayInfo, displays: [DisplayInfo],
                   completion: @escaping @MainActor () -> Void)
 }
@@ -24,8 +24,8 @@ public final class SystemCycleRunner: CycleRunning {
     }
 }
 
-/// Compte a rebours isole du reste de l'etat : il change chaque seconde et ne doit rafraichir que le titre
-/// de la barre de menus, jamais le menu ouvert (sinon les sous-menus se referment).
+/// Countdown kept apart from the rest of the state: it changes every second and must only refresh the
+/// menu bar title, never the open menu (otherwise submenus close).
 @MainActor
 public final class CountdownState: ObservableObject {
     @Published public var remaining: Int
@@ -53,7 +53,7 @@ public final class MouseMoverController: ObservableObject {
     @Published public private(set) var isBusy = false
     @Published public private(set) var launchAtLoginEnabled: Bool
     @Published public private(set) var accessibilityTrusted: Bool
-    /// Motifs integres puis motifs de l'utilisateur.
+    /// Built-in patterns, then the user's patterns.
     @Published public private(set) var patterns: [MousePattern]
     @Published public private(set) var patternMode: PatternMode
     @Published public private(set) var selectedPatternIDs: [String]
@@ -71,7 +71,7 @@ public final class MouseMoverController: ObservableObject {
     static let languageKey = "language"
     private var timer: Timer?
     private var sequenceIndex = 0
-    /// Appele apres chaque changement de la liste des motifs (ex. : rafraichir les parametres Siri).
+    /// Called after every change to the pattern list (e.g. to refresh the App Shortcuts parameters).
     public var onPatternsChanged: (() -> Void)?
 
     public init(configStore: ConfigStore = ConfigStore(),
@@ -110,7 +110,7 @@ public final class MouseMoverController: ObservableObject {
         set { countdown.remaining = newValue }
     }
 
-    // MARK: - Etat affiche
+    // MARK: - Displayed state
 
     public var statusTitle: String {
         guard isRunning else { return "🖱 \(L10n.paused)" }
@@ -126,9 +126,9 @@ public final class MouseMoverController: ObservableObject {
         !Self.intervalPresets.contains { $0.seconds == interval }
     }
 
-    // MARK: - Minuterie
+    // MARK: - Timer
 
-    /// Demarre la minuterie d'une seconde (en mode `.common` pour continuer pendant que le menu est ouvert).
+    /// Starts the one-second timer (in `.common` mode so it keeps running while the menu is open).
     public func startTimer() {
         guard timer == nil else { return }
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
@@ -184,7 +184,7 @@ public final class MouseMoverController: ObservableObject {
         return true
     }
 
-    /// Accepte une virgule ou un point decimal. Renvoie `false` si la valeur est invalide.
+    /// Accepts a decimal comma or point. Returns `false` if the value is invalid.
     @discardableResult
     public func setCustomInterval(minutesText: String) -> Bool {
         let normalized = minutesText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -226,7 +226,7 @@ public final class MouseMoverController: ObservableObject {
         if enabled != launchAtLoginEnabled { launchAtLoginEnabled = enabled }
     }
 
-    // MARK: - Motifs
+    // MARK: - Patterns
 
     public func pattern(id: String) -> MousePattern? {
         patterns.first { $0.id == id }
@@ -240,7 +240,7 @@ public final class MouseMoverController: ObservableObject {
         selectedPatternIDs.contains(id)
     }
 
-    /// Motifs coches, dans l'ordre de la liste.
+    /// Checked patterns, in list order.
     public var selectedPatterns: [MousePattern] {
         patterns.filter { selectedPatternIDs.contains($0.id) }
     }
@@ -252,7 +252,7 @@ public final class MouseMoverController: ObservableObject {
         updateSelection(selectedPatternIDs)
     }
 
-    /// Mode « un seul » : choisit ce motif. Autres modes : le coche ou le decoche (au moins un reste coche).
+    /// Single mode: selects this pattern. Other modes: checks or unchecks it (at least one stays checked).
     public func togglePattern(_ id: String) {
         guard pattern(id: id) != nil else { return }
         if patternMode == .single {
@@ -265,7 +265,7 @@ public final class MouseMoverController: ObservableObject {
         }
     }
 
-    /// Joue uniquement ce motif desormais (mode « un seul »).
+    /// From now on, plays only this pattern (single mode).
     @discardableResult
     public func usePattern(_ id: String) -> Bool {
         guard pattern(id: id) != nil else { return false }
@@ -275,7 +275,7 @@ public final class MouseMoverController: ObservableObject {
         return true
     }
 
-    /// Ajoute ou remplace un motif de l'utilisateur. Les motifs integres ne sont pas modifiables.
+    /// Adds or replaces a user pattern. Built-in patterns cannot be changed.
     @discardableResult
     public func savePattern(_ pattern: MousePattern) -> MousePattern? {
         guard !pattern.isBuiltIn else { return nil }
@@ -291,7 +291,7 @@ public final class MouseMoverController: ObservableObject {
         return clean
     }
 
-    /// Copie modifiable d'un motif (integre ou non), ajoutee a la liste.
+    /// Editable copy of a pattern (built-in or not), added to the list.
     @discardableResult
     public func duplicatePattern(_ id: String) -> MousePattern? {
         guard let source = pattern(id: id) else { return nil }
@@ -301,7 +301,7 @@ public final class MouseMoverController: ObservableObject {
         return savePattern(copy)
     }
 
-    /// Nouveau motif (vide par defaut, a remplir dans l'editeur), avec un nom unique.
+    /// New pattern (empty by default, to fill in the editor), with a unique name.
     @discardableResult
     public func createPattern(named base: String = L10n.newPattern, points: [PatternPoint] = []) -> MousePattern {
         let pattern = MousePattern(name: uniqueName(base: base), points: points)
@@ -313,7 +313,7 @@ public final class MouseMoverController: ObservableObject {
         updatePatterns(customPatterns.filter { $0.id != id })
     }
 
-    /// Motif a jouer au prochain cycle, selon le mode.
+    /// Pattern to play on the next cycle, depending on the mode.
     public func nextPattern() -> MousePattern {
         let candidates = selectedPatterns.filter { !$0.points.isEmpty }
         guard !candidates.isEmpty else { return .classic }
@@ -329,7 +329,7 @@ public final class MouseMoverController: ObservableObject {
         }
     }
 
-    /// Joue tout de suite un motif precis (bouton « Tester » de l'editeur), sans toucher au compte a rebours.
+    /// Plays a given pattern right away (the editor's Test button), without touching the countdown.
     @discardableResult
     public func runPattern(_ pattern: MousePattern) -> Bool {
         triggerCycle(with: pattern.sanitized())
@@ -380,7 +380,7 @@ public final class MouseMoverController: ObservableObject {
         if persisting { persist() }
     }
 
-    /// Ids existants, sans doublon, au moins un (le Classique par defaut), un seul en mode « un seul ».
+    /// Existing ids, no duplicates, at least one (Classic by default), only one in single mode.
     static func validSelection(_ ids: [String], mode: PatternMode, in patterns: [MousePattern]) -> [String] {
         let known = Set(patterns.map(\.id))
         var seen = Set<String>()
@@ -390,7 +390,7 @@ public final class MouseMoverController: ObservableObject {
         return valid
     }
 
-    // MARK: - Interne
+    // MARK: - Internal
 
     @discardableResult
     private func triggerCycle(with pattern: MousePattern? = nil) -> Bool {
@@ -399,11 +399,11 @@ public final class MouseMoverController: ObservableObject {
         let current = displayProvider.activeDisplays()
         if current != displays { displays = current }
         guard let target = DisplayCatalog.resolve(selected: selectedDisplayID, in: current) else {
-            Log.core.error("Aucun ecran actif, cycle ignore.")
+            Log.core.error("No active display, cycle skipped.")
             return false
         }
         if let selectedDisplayID, selectedDisplayID != target.id {
-            Log.core.notice("Ecran selectionne introuvable, retour a l'ecran principal.")
+            Log.core.notice("Selected display not found, using the main display.")
         }
 
         isBusy = true
@@ -417,7 +417,7 @@ public final class MouseMoverController: ObservableObject {
         do {
             try configStore.save(config)
         } catch {
-            Log.core.error("Sauvegarde de la config impossible: \(String(describing: error))")
+            Log.core.error("Could not save the config: \(String(describing: error))")
         }
     }
 }

@@ -12,7 +12,7 @@ public struct SelfTestReport: Codable, Equatable {
     public var passed: Bool
 }
 
-/// Pilote qui delegue au pilote reel et memorise la position reelle du curseur apres chaque action.
+/// Driver that forwards to the real driver and records the actual cursor position after each action.
 final class RecordingMouseDriver: MouseDriver {
     private let base: CGMouseDriver
     private(set) var positions: [Point] = []
@@ -37,8 +37,8 @@ final class RecordingMouseDriver: MouseDriver {
     func sleep(_ seconds: Double) { base.sleep(seconds) }
 }
 
-/// Auto-verification : joue un vrai cycle sur l'ecran principal et controle que le curseur
-/// est reellement passe pres des quatre coins puis revenu au centre.
+/// Self-test: plays a real cycle on the main display and checks that the cursor really went
+/// near the four corners and then back to the center.
 public enum SelfTest {
     public static func run(displays: DisplayProviding = SystemDisplayProvider()) -> SelfTestReport {
         let trusted = AXIsProcessTrusted()

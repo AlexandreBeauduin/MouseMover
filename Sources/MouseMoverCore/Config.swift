@@ -2,16 +2,16 @@ import Foundation
 import os
 
 enum Log {
-    static let core = Logger(subsystem: "com.pudeldoodle.MouseMover", category: "core")
+    static let core = Logger(subsystem: "io.github.alexandrebeauduin.MouseMover", category: "core")
 }
 
-/// Facon de choisir le motif joue a chaque cycle.
+/// How the pattern played on each cycle is chosen.
 public enum PatternMode: String, Codable, CaseIterable, Sendable {
-    /// Toujours le meme motif.
+    /// Always the same pattern.
     case single
-    /// Un motif tire au hasard parmi ceux coches.
+    /// A random pattern among the checked ones.
     case random
-    /// Les motifs coches, chacun son tour.
+    /// The checked patterns, one after the other.
     case sequence
 }
 
@@ -22,7 +22,7 @@ public struct MouseMoverConfig: Codable, Equatable {
     public var intervalSeconds: Int
     public var launchAtLogin: Bool
     public var displayID: UInt32?
-    /// Motifs crees par l'utilisateur (les motifs integres ne sont jamais enregistres).
+    /// Patterns created by the user (built-in patterns are never saved).
     public var patterns: [MousePattern]
     public var patternMode: PatternMode
     public var selectedPatternIDs: [String]

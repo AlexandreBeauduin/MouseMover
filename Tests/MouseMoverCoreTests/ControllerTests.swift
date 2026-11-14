@@ -34,7 +34,7 @@ final class ControllerTests: XCTestCase {
         for _ in 0..<count { controller.tick() }
     }
 
-    // MARK: Etat initial et titres
+    // MARK: Initial state and titles
 
     func testInitialState() {
         let c = makeController()
@@ -65,7 +65,7 @@ final class ControllerTests: XCTestCase {
         XCTAssertEqual(c.selectedDisplayID, 2)
     }
 
-    // MARK: Minuterie
+    // MARK: Timer
 
     func testTickDoesNothingWhenPaused() {
         let c = makeController(config: MouseMoverConfig(intervalSeconds: 10))
@@ -112,17 +112,17 @@ final class ControllerTests: XCTestCase {
         XCTAssertEqual(c.remaining, 10)
     }
 
-    // MARK: Stabilite du menu
+    // MARK: Menu stability
 
-    /// Un menu ouvert est reconstruit a chaque notification : le timer ne doit rien publier sur le controleur.
+    /// An open menu is rebuilt on every notification: the timer must publish nothing on the controller.
     func testTickDoesNotNotifyMenuObservers() {
         let c = makeController(config: MouseMoverConfig(intervalSeconds: 100))
         var notifications = 0
         let cancellable = c.objectWillChange.sink { notifications += 1 }
-        tick(c, 5)          // en pause
+        tick(c, 5)          // paused
         c.start()
         let afterStart = notifications
-        tick(c, 5)          // en marche : seul le compte a rebours change
+        tick(c, 5)          // running: only the countdown changes
         XCTAssertEqual(notifications, afterStart)
         XCTAssertEqual(c.remaining, 95)
         cancellable.cancel()
@@ -148,7 +148,7 @@ final class ControllerTests: XCTestCase {
         cancellable.cancel()
     }
 
-    // MARK: Executer maintenant
+    // MARK: Run now
 
     func testRunNowWorksWhenPausedAndResetsCountdown() {
         let c = makeController(config: MouseMoverConfig(intervalSeconds: 10))
@@ -177,7 +177,7 @@ final class ControllerTests: XCTestCase {
         XCTAssertFalse(c.isBusy)
     }
 
-    // MARK: Ecrans
+    // MARK: Displays
 
     func testCycleUsesSelectedDisplay() {
         let c = makeController()
@@ -215,7 +215,7 @@ final class ControllerTests: XCTestCase {
         XCTAssertEqual(c.displays.count, 3)
     }
 
-    // MARK: Intervalle
+    // MARK: Interval
 
     func testSetIntervalPersistsAndResetsCountdown() {
         let c = makeController()
@@ -261,7 +261,7 @@ final class ControllerTests: XCTestCase {
         XCTAssertFalse(c.isCustomInterval)
     }
 
-    // MARK: Lancement a la connexion
+    // MARK: Launch at login
 
     func testLaunchAtLoginSuccessIsPersisted() {
         let c = makeController()
@@ -287,7 +287,7 @@ final class ControllerTests: XCTestCase {
         XCTAssertTrue(c.launchAtLoginEnabled)
     }
 
-    // MARK: Accessibilite
+    // MARK: Accessibility
 
     func testAccessibilityIsPolledEachTick() {
         let c = makeController()

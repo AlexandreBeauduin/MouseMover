@@ -4,7 +4,7 @@ import XCTest
 final class GestureRecorderTests: XCTestCase {
     private let bounds = DisplayBounds(minX: 0, maxX: 1000, minY: 0, maxY: 1000)
 
-    /// Releves a 60 Hz le long d'un segment.
+    /// Samples at 60 Hz along a segment.
     private func line(from a: Point, to b: Point, start: Double, duration: Double) -> [GestureSample] {
         let steps = max(1, Int(duration * 60))
         return (0...steps).map { step in

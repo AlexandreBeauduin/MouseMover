@@ -6,7 +6,7 @@ final class MousePatternTests: XCTestCase {
         try JSONDecoder().decode(MousePattern.self, from: Data(json.utf8))
     }
 
-    // MARK: Decodage tolerant
+    // MARK: Lenient decoding
 
     func testRoundTripKeepsEverything() throws {
         let pattern = MousePattern(
@@ -69,7 +69,7 @@ final class MousePatternTests: XCTestCase {
         XCTAssertEqual(pattern.points, [PatternPoint(x: 0.5, y: 0.5)])
     }
 
-    // MARK: Motifs integres
+    // MARK: Built-in patterns
 
     func testBuiltInsAreValidAndMarked() {
         XCTAssertEqual(Set(MousePattern.builtIns.map(\.id)).count, MousePattern.builtIns.count)
@@ -81,7 +81,7 @@ final class MousePatternTests: XCTestCase {
         XCTAssertFalse(MousePattern(name: "x", points: []).isBuiltIn)
     }
 
-    // MARK: Ordre
+    // MARK: Order
 
     func testFixedPointsKeepTheirSlotWhenShuffled() {
         let random = FakeRandom()
@@ -106,7 +106,7 @@ final class PatternPlaybackTests: XCTestCase {
     func testScreenPointsAreFractionsOfTheDisplay() {
         let bounds = Fixtures.left.bounds
         XCTAssertEqual(ActivityCycle.locate(PatternPoint(x: 0.25, y: 0.5), in: bounds, origin: nil),
-                       Point(x: -1921, y: 719)) // bornes inclusives : 2559 x 1439
+                       Point(x: -1921, y: 719)) // inclusive bounds: 2559 x 1439
     }
 
     func testCursorPointsAreRelativeToCursor() {

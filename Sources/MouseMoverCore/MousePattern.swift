@@ -1,6 +1,6 @@
 import Foundation
 
-/// Repere des points d'un motif : l'ecran entier, ou le curseur (au centre du repere) au debut du cycle.
+/// Frame of a pattern's points: the whole display, or the cursor (at the center) when the cycle starts.
 public enum PatternAnchor: String, Codable, CaseIterable, Sendable {
     case screen
     case cursor
@@ -16,16 +16,16 @@ public struct PauseRange: Equatable, Sendable {
     }
 }
 
-/// Une etape du motif : aller au point, attendre eventuellement, puis cliquer eventuellement.
+/// One step of a pattern: go to the point, optionally wait, then optionally click.
 public struct PatternPoint: Codable, Equatable, Sendable {
-    /// Position en fraction de l'ecran (0...1), (0, 0) en haut a gauche.
+    /// Position as a fraction of the display (0...1), (0, 0) at the top left.
     public var x: Double
     public var y: Double
     public var click: Bool
     public var pause: PauseRange?
-    /// Duree du deplacement, en secondes. `nil` : duree et courbe tirees au hasard, comme un humain.
+    /// Duration of the move, in seconds. `nil`: random duration and curve, like a human.
     public var duration: Double?
-    /// Garde sa place quand l'ordre du motif est melange.
+    /// Keeps its place when the pattern order is shuffled.
     public var fixed: Bool
 
     public init(x: Double, y: Double, click: Bool = false, pause: PauseRange? = nil,
@@ -80,7 +80,7 @@ public struct MousePattern: Codable, Equatable, Identifiable, Sendable {
     public var id: String
     public var name: String
     public var anchor: PatternAnchor
-    /// Melange l'ordre des points non fixes a chaque cycle.
+    /// Shuffles the order of the non-fixed points on each cycle.
     public var shuffle: Bool
     public var points: [PatternPoint]
 
@@ -110,7 +110,7 @@ public struct MousePattern: Codable, Equatable, Identifiable, Sendable {
         self = sanitized()
     }
 
-    /// Ramene chaque valeur dans des bornes sures : un motif mal ecrit ne doit jamais bloquer la souris.
+    /// Brings every value into safe bounds: a badly written pattern must never lock the mouse.
     public func sanitized() -> MousePattern {
         var copy = self
         copy.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -135,7 +135,7 @@ public struct MousePattern: Codable, Equatable, Identifiable, Sendable {
         return copy
     }
 
-    /// Ordre de passage : les points fixes gardent leur place, les autres sont melanges entre eux.
+    /// Playing order: fixed points keep their place, the others are shuffled among themselves.
     func order(shuffledBy random: RandomSource) -> [PatternPoint] {
         guard shuffle else { return points }
         let movableSlots = points.indices.filter { !points[$0].fixed }
@@ -147,7 +147,7 @@ public struct MousePattern: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-/// Decode un element sans faire echouer tout le tableau s'il est invalide.
+/// Decodes an element without failing the whole array when it is invalid.
 struct Lossy<Value: Decodable>: Decodable {
     let value: Value?
 
@@ -156,12 +156,12 @@ struct Lossy<Value: Decodable>: Decodable {
     }
 }
 
-// MARK: - Motifs integres
+// MARK: - Built-in patterns
 
 extension MousePattern {
     static let builtInPrefix = "builtin."
 
-    /// Le cycle historique : centre, clic, quatre coins dans un ordre aleatoire, retour au centre.
+    /// The original cycle: center, click, the four corners in random order, back to the center.
     public static var classic: MousePattern {
         MousePattern(
             id: "builtin.classic", name: L10n.patternClassic, shuffle: true,
@@ -175,7 +175,7 @@ extension MousePattern {
             ])
     }
 
-    /// Quelques pixels autour du curseur, sans clic, puis retour exact a sa position.
+    /// A few pixels around the cursor, no click, then back to its exact position.
     public static var discreet: MousePattern {
         MousePattern(
             id: "builtin.discreet", name: L10n.patternDiscreet, anchor: .cursor,
@@ -187,12 +187,12 @@ extension MousePattern {
             ])
     }
 
-    /// Un tour d'ecran en cercle autour du centre, sans clic.
+    /// One circle around the center of the display, no click.
     public static var circle: MousePattern {
         MousePattern(id: "builtin.circle", name: L10n.patternCircle, points: circlePoints(count: 16, radius: 0.3))
     }
 
-    /// Balayage en zigzag de gauche a droite, sans clic.
+    /// A zigzag sweep from left to right, no click.
     public static var zigzag: MousePattern {
         MousePattern(
             id: "builtin.zigzag", name: L10n.patternZigzag,
@@ -208,7 +208,7 @@ extension MousePattern {
     private static func circlePoints(count: Int, radius: Double) -> [PatternPoint] {
         (0...count).map { step in
             let angle = Double(step) / Double(count) * 2 * Double.pi
-            // 9/16 : reste a peu pres rond sur un ecran 16:9.
+            // 9/16: stays roughly round on a 16:9 display.
             let x = ((0.5 + radius * cos(angle) * 9 / 16) * 1000).rounded() / 1000
             let y = ((0.5 + radius * sin(angle)) * 1000).rounded() / 1000
             return PatternPoint(x: x, y: y, duration: 0.09)

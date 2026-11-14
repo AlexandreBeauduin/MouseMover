@@ -20,7 +20,7 @@ struct MouseMoverApp: App {
         MouseMoverShortcuts.updateAppShortcutParameters()
         AccessibilityPermission.requestPromptOnce()
 
-        // La migration du LaunchAgent Python n'a de sens que pour l'app installee.
+        // Migrating the Python LaunchAgent only makes sense for the installed app.
         if Bundle.main.bundlePath.hasPrefix("/Applications/") {
             LegacyLaunchAgentMigrator().migrateIfNeeded()
             controller.refreshLaunchAtLogin()
@@ -68,7 +68,7 @@ struct MouseMoverApp: App {
     }
 }
 
-/// Titre de la barre de menus : seul element qui observe le compte a rebours.
+/// Menu bar title: the only view that observes the countdown.
 struct StatusLabel: View {
     @ObservedObject var controller: MouseMoverController
     @ObservedObject var countdown: CountdownState

@@ -33,7 +33,7 @@ public struct Point: Equatable, Sendable {
     }
 }
 
-/// Division entiere arrondie vers le bas (comme `//` en Python), y compris pour les negatifs.
+/// Integer division rounded down (like `//` in Python), negative numbers included.
 func floorDiv(_ a: Int, _ b: Int) -> Int {
     let q = a / b
     return (a % b != 0 && (a < 0) != (b < 0)) ? q - 1 : q
@@ -95,12 +95,12 @@ public enum DisplayCatalog {
             .map(\.element)
     }
 
-    /// `index` est la position (1, 2, 3...) dans la liste triee de gauche a droite.
+    /// `index` is the position (1, 2, 3...) in the list sorted from left to right.
     public static func label(for display: DisplayInfo, index: Int) -> String {
         L10n.displayLabel(index: index, width: display.width, height: display.height, isMain: display.isMain)
     }
 
-    /// Ecran cible : celui choisi s'il existe encore, sinon l'ecran principal. `nil` si aucun ecran actif.
+    /// Target display: the chosen one if it still exists, else the main display. `nil` if no display is active.
     public static func resolve(selected: UInt32?, in displays: [DisplayInfo]) -> DisplayInfo? {
         if let selected, let match = displays.first(where: { $0.id == selected }) {
             return match

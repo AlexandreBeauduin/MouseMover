@@ -20,9 +20,9 @@ final class DisplayTests: XCTestCase {
     }
 
     func testCenterWithNegativeOrigin() {
-        // (-2560 + -1) // 2 = -1281 (et non -1280) ; (0 + 1439) // 2 = 719
+        // (-2560 + -1) // 2 = -1281 (not -1280); (0 + 1439) // 2 = 719
         XCTAssertEqual(Fixtures.left.bounds.center, Point(x: -1281, y: 719))
-        // (-625 + 740) // 2 = 57 ; (-1024 + -1) // 2 = -513
+        // (-625 + 740) // 2 = 57; (-1024 + -1) // 2 = -513
         XCTAssertEqual(Fixtures.upperLeft.bounds.center, Point(x: 57, y: -513))
     }
 

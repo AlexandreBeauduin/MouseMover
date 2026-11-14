@@ -1,6 +1,6 @@
 import Foundation
 
-/// Courbes d'acceleration identiques a celles de pytweening utilisees par la version Python.
+/// Easing curves identical to the pytweening ones used by the Python version.
 public enum Easing: CaseIterable, Sendable {
     case easeInOutQuad
     case easeOutQuad

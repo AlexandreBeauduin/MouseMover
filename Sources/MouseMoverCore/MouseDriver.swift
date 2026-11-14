@@ -10,14 +10,14 @@ public enum MouseError: Error, Equatable {
 public protocol MouseDriver: AnyObject {
     func position() -> Point
     func move(to point: Point, duration: Double, easing: Easing) throws
-    /// Deplacement lineaire a vitesse constante, sans pause a l'arrivee : sert a rejouer un geste.
+    /// Linear move at constant speed, no pause on arrival: used to replay a gesture.
     func glide(to point: Point, duration: Double) throws
     func click() throws
     func sleep(_ seconds: Double)
 }
 
-/// Pilote reel base sur CGEvent. Reproduit le comportement de pyautogui :
-/// failsafe en (0, 0), pause apres chaque action, deplacement interpole avec courbe d'acceleration.
+/// Real driver based on CGEvent. Mimics pyautogui: fail-safe at (0, 0), a pause after each
+/// action, interpolated moves with an easing curve.
 public final class CGMouseDriver: MouseDriver {
     public static let minimumDuration = 0.1
 

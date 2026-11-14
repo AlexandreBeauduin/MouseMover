@@ -19,7 +19,7 @@ final class FakeMouseDriver: MouseDriver {
 
     var events: [Event] = []
     var current = Point(x: 500, y: 500)
-    /// Leve `error` a la N-ieme action (deplacement ou clic), en comptant depuis 1.
+    /// Throws `error` on the Nth action (move or click), counting from 1.
     var failOnAction: Int?
     var error: Error = MouseError.failSafeTriggered
     private var actionCount = 0
@@ -64,7 +64,7 @@ final class FakeMouseDriver: MouseDriver {
     var clickCount: Int { events.filter { $0 == .click }.count }
 }
 
-/// Source aleatoire deterministe : valeurs minimales, ordre inchange, premier choix. Journalise chaque appel.
+/// Deterministic random source: minimal values, unchanged order, first choice. Logs every call.
 final class FakeRandom: RandomSource {
     var calls: [String] = []
     var intValue: Int?
@@ -138,7 +138,7 @@ final class FakeCycleRunner: CycleRunning {
 }
 
 enum Fixtures {
-    // Configuration reelle de l'utilisateur : principal 3200x1800 en (0,0), un ecran a gauche, un au-dessus a gauche.
+    // A real setup: main 3200x1800 at (0,0), one display on the left, one above on the left.
     static let main = DisplayInfo(id: 1, x: 0, y: 0, width: 3200, height: 1800, isMain: true)
     static let left = DisplayInfo(id: 2, x: -2560, y: 0, width: 2560, height: 1440, isMain: false)
     static let upperLeft = DisplayInfo(id: 3, x: -625, y: -1024, width: 1366, height: 1024, isMain: false)
