@@ -93,7 +93,7 @@ public enum L10n {
     }
     public static var languageMenu: String { t(en: "Language", fr: "Langue", nl: "Taal", de: "Sprache") }
     public static var systemLanguage: String { t(en: "System", fr: "Système", nl: "Systeem", de: "System") }
-    public static var quit: String { t(en: "Quit", fr: "Quitter", nl: "Stoppen", de: "Beenden") }
+    public static var quit: String { t(en: "Quit MouseMover", fr: "Quitter MouseMover", nl: "MouseMover stoppen", de: "MouseMover beenden") }
 
     // MARK: - Pattern menu
 
@@ -235,10 +235,10 @@ public enum L10n {
     }
     public static var test: String { t(en: "Test", fr: "Tester", nl: "Testen", de: "Testen") }
     public static var testHelp: String {
-        t(en: "Play the pattern right now (move the mouse into a corner to interrupt it).",
-          fr: "Joue le motif tout de suite (souris dans un coin pour l'interrompre).",
-          nl: "Speel het patroon nu af (beweeg de muis naar een hoek om te onderbreken).",
-          de: "Spielt das Muster sofort ab (Maus in eine Ecke bewegen, um abzubrechen).")
+        t(en: "Play the pattern right now (move the mouse to the top-left corner to stop it).",
+          fr: "Joue le motif tout de suite (souris dans le coin en haut à gauche pour l'arrêter).",
+          nl: "Speel het patroon nu af (beweeg de muis naar de linkerbovenhoek om te stoppen).",
+          de: "Spielt das Muster sofort ab (Maus in die obere linke Ecke bewegen, um abzubrechen).")
     }
     public static var anchor: String { t(en: "Reference", fr: "Repère", nl: "Referentie", de: "Bezug") }
     public static var anchorScreen: String { t(en: "On screen", fr: "Sur l'écran", nl: "Op het scherm", de: "Auf dem Bildschirm") }

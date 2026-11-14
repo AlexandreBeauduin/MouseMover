@@ -72,7 +72,7 @@ public struct ActivityCycle {
             }
             return .completed
         } catch MouseError.failSafeTriggered {
-            Log.core.notice("Fail-safe triggered (mouse in a corner), cycle skipped.")
+            Log.core.notice("Fail-safe triggered (mouse at the top-left corner), cycle skipped.")
             return .failSafe
         } catch {
             Log.core.error("Error during the activity cycle (ignored): \(String(describing: error))")
