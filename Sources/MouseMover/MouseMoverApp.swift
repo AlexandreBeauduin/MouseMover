@@ -17,7 +17,6 @@ struct MouseMoverApp: App {
         controller.startTimer()
         controller.onPatternsChanged = { MouseMoverShortcuts.updateAppShortcutParameters() }
         MouseMoverShortcuts.updateAppShortcutParameters()
-        if #available(macOS 27.0, *) { MouseMoverTimerIndexer.start() }
         AccessibilityPermission.requestPromptOnce()
 
         // La migration du LaunchAgent Python n'a de sens que pour l'app installee.

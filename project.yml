@@ -47,13 +47,6 @@ targets:
         CFBundleDevelopmentRegion: fr
         CFBundleLocalizations: [fr]
         LSUIElement: true
-        # Siri en français transcrit « MouseMover » en « mousse Mother » : on déclare
-        # les variantes entendues pour que les phrases des App Shortcuts s'apparient.
-        INAlternativeAppNames:
-          - INAlternativeAppName: Mouse Mover
-            INAlternativeAppNamePronunciationHint: maouss mouveur
-          - INAlternativeAppName: Mousse Mover
-            INAlternativeAppNamePronunciationHint: mouss mouveur
         LSApplicationCategoryType: public.app-category.utilities
         NSHumanReadableCopyright: "MouseMover"
     settings:
