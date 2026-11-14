@@ -1,0 +1,14 @@
+// Code signing shared by every target.
+//
+// By default the app is signed ad hoc ("Sign to Run Locally"): anyone can build it without an
+// Apple developer account. To sign with your own certificate instead (macOS then keeps the
+// Accessibility permission across rebuilds), create Config/Local.xcconfig (ignored by git), e.g.:
+//
+//   CODE_SIGN_IDENTITY = Apple Development: Your Name (ABCDE12345)
+//   DEVELOPMENT_TEAM = ABCDE12345
+
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = -
+DEVELOPMENT_TEAM =
+
+#include? "Local.xcconfig"

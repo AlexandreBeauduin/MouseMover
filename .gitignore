@@ -4,3 +4,4 @@ Sources/MouseMover/Info.plist
 .DS_Store
 xcuserdata/
 DerivedData/
+Config/Local.xcconfig
