@@ -1,6 +1,7 @@
 import Foundation
 
-/// Un cycle d'activite souris sur un ecran : centre, clic, quatre coins dans un ordre aleatoire, retour au centre.
+/// Un cycle d'activite souris sur un ecran : joue un motif, par defaut le motif « Classique »
+/// (centre, clic, quatre coins dans un ordre aleatoire, retour au centre).
 public struct ActivityCycle {
     public static let safeMargin = 80
 
@@ -24,28 +25,51 @@ public struct ActivityCycle {
             y: max(bounds.minY + safeMargin, min(point.y, bounds.maxY - safeMargin)))
     }
 
-    /// Ne leve jamais d'erreur : le failsafe ou toute autre erreur interrompt simplement le cycle.
+    /// Position reelle d'un point du motif. Ecran : (0, 0) est le coin haut gauche, (1, 1) le coin bas droit.
+    /// Curseur : (0.5, 0.5) est la position du curseur, l'echelle reste celle de l'ecran.
+    public static func locate(_ point: PatternPoint, in bounds: DisplayBounds, origin: Point?) -> Point {
+        let width = Double(bounds.maxX - bounds.minX)
+        let height = Double(bounds.maxY - bounds.minY)
+        guard let origin else {
+            return Point(x: bounds.minX + Int((point.x * width).rounded(.down)),
+                         y: bounds.minY + Int((point.y * height).rounded(.down)))
+        }
+        return Point(x: origin.x + Int(((point.x - 0.5) * width).rounded(.down)),
+                     y: origin.y + Int(((point.y - 0.5) * height).rounded(.down)))
+    }
+
     public func run(on display: DisplayInfo) -> Outcome {
-        let bounds = display.bounds
-        let safe = bounds.center
-        let corners = [
-            Point(x: bounds.minX, y: bounds.maxY),
-            Point(x: bounds.minX, y: bounds.minY),
-            Point(x: bounds.maxX, y: bounds.minY),
-            Point(x: bounds.maxX, y: bounds.maxY),
-        ]
+        run(.classic, on: display)
+    }
 
-        do {
-            try humanMove(to: Self.clamp(safe, to: bounds))
-            humanPause(0.08, 0.18)
-            try driver.click()
-
-            for corner in random.shuffled(corners) {
-                try humanMove(to: Self.clamp(corner, to: bounds))
-                humanPause()
+    /// Ne leve jamais d'erreur : le failsafe ou toute autre erreur interrompt simplement le cycle.
+    /// `displays` sert au repere « curseur » : on reste sur l'ecran ou se trouve le curseur.
+    public func run(_ pattern: MousePattern, on display: DisplayInfo, displays: [DisplayInfo] = []) -> Outcome {
+        var bounds = display.bounds
+        var origin: Point?
+        if pattern.anchor == .cursor {
+            let cursor = driver.position()
+            if let current = (displays + [display]).first(where: { $0.bounds.contains(cursor) }) {
+                bounds = current.bounds
+                origin = cursor
+            } else {
+                origin = bounds.center
             }
+        }
 
-            try humanMove(to: safe)
+        // Melange au premier point mobile (et non avant) : meme suite de tirages que la version Python.
+        var order: [PatternPoint]? = pattern.shuffle ? nil : pattern.points
+        do {
+            for index in pattern.points.indices {
+                if order == nil, !pattern.points[index].fixed {
+                    order = pattern.order(shuffledBy: random)
+                }
+                let point = order?[index] ?? pattern.points[index]
+                let target = Self.clamp(Self.locate(point, in: bounds, origin: origin), to: bounds)
+                try humanMove(to: target, duration: point.duration)
+                if let pause = point.pause { humanPause(pause.min, pause.max) }
+                if point.click { try driver.click() }
+            }
             return .completed
         } catch MouseError.failSafeTriggered {
             Log.core.notice("Failsafe declenche (souris dans un coin), cycle ignore.")
@@ -56,7 +80,12 @@ public struct ActivityCycle {
         }
     }
 
-    func humanMove(to target: Point) throws {
+    /// Sans duree imposee : leger decalage, duree et courbe aleatoires. Avec une duree : trajet exact et lineaire.
+    func humanMove(to target: Point, duration: Double? = nil) throws {
+        if let duration {
+            try driver.glide(to: target, duration: duration)
+            return
+        }
         let jitter = random.int(in: 1...4)
         let x = target.x + random.int(in: -jitter...jitter)
         let y = target.y + random.int(in: -jitter...jitter)

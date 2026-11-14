@@ -75,3 +75,38 @@ final class ConfigTests: XCTestCase {
         XCTAssertTrue(ConfigStore.defaultURL.path.hasSuffix("Application Support/MouseMover/config.json"))
     }
 }
+
+final class PatternConfigTests: XCTestCase {
+    private func decode(_ json: String) throws -> MouseMoverConfig {
+        try JSONDecoder().decode(MouseMoverConfig.self, from: Data(json.utf8))
+    }
+
+    func testOldConfigGetsPatternDefaults() throws {
+        let config = try decode(#"{"interval_seconds": 60}"#)
+        XCTAssertTrue(config.patterns.isEmpty)
+        XCTAssertEqual(config.patternMode, .single)
+        XCTAssertEqual(config.selectedPatternIDs, ["builtin.classic"])
+    }
+
+    func testPatternsRoundTrip() throws {
+        let url = Fixtures.tempURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let config = MouseMoverConfig(
+            patterns: [MousePattern(id: "a", name: "A", anchor: .cursor, points: [PatternPoint(x: 0.1, y: 0.9, click: true)])],
+            patternMode: .sequence, selectedPatternIDs: ["a", "builtin.circle"])
+        try ConfigStore(url: url).save(config)
+        XCTAssertEqual(ConfigStore(url: url).load(), config)
+    }
+
+    func testBadPatternsAreDroppedWithoutLosingTheRest() throws {
+        let config = try decode(#"""
+        {"interval_seconds": 120, "pattern_mode": "chaos",
+         "patterns": [{"name": "sans id"}, {"id": "builtin.x", "points": []}, {"id": "ok", "points": []}, {"id": "ok", "points": []}],
+         "selected_pattern_ids": "classic"}
+        """#)
+        XCTAssertEqual(config.intervalSeconds, 120)
+        XCTAssertEqual(config.patterns.map(\.id), ["ok"])
+        XCTAssertEqual(config.patternMode, .single)
+        XCTAssertEqual(config.selectedPatternIDs, ["builtin.classic"])
+    }
+}

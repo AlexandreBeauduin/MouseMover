@@ -17,6 +17,10 @@ public struct DisplayBounds: Equatable, Sendable {
     public var center: Point {
         Point(x: floorDiv(minX + maxX, 2), y: floorDiv(minY + maxY, 2))
     }
+
+    public func contains(_ point: Point) -> Bool {
+        (minX...maxX).contains(point.x) && (minY...maxY).contains(point.y)
+    }
 }
 
 public struct Point: Equatable, Sendable {

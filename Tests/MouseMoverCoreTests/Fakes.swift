@@ -4,6 +4,7 @@ import Foundation
 final class FakeMouseDriver: MouseDriver {
     enum Event: Equatable {
         case move(Point, Double, Easing)
+        case glide(Point, Double)
         case click
         case sleep(Double)
     }
@@ -23,6 +24,12 @@ final class FakeMouseDriver: MouseDriver {
         events.append(.move(point, duration, easing))
     }
 
+    func glide(to point: Point, duration: Double) throws {
+        try checkFailure()
+        current = point
+        events.append(.glide(point, duration))
+    }
+
     func click() throws {
         try checkFailure()
         events.append(.click)
@@ -38,7 +45,12 @@ final class FakeMouseDriver: MouseDriver {
     }
 
     var moves: [Point] {
-        events.compactMap { if case .move(let p, _, _) = $0 { return p } else { return nil } }
+        events.compactMap {
+            switch $0 {
+            case .move(let p, _, _), .glide(let p, _): p
+            default: nil
+            }
+        }
     }
 
     var clickCount: Int { events.filter { $0 == .click }.count }
@@ -100,10 +112,13 @@ final class FakeLoginItem: LoginItemManaging {
 @MainActor
 final class FakeCycleRunner: CycleRunning {
     private(set) var ranOn: [DisplayInfo] = []
+    private(set) var ranPatterns: [MousePattern] = []
     private var completions: [@MainActor () -> Void] = []
 
-    func runCycle(on display: DisplayInfo, completion: @escaping @MainActor () -> Void) {
+    func runCycle(_ pattern: MousePattern, on display: DisplayInfo, displays: [DisplayInfo],
+                  completion: @escaping @MainActor () -> Void) {
         ranOn.append(display)
+        ranPatterns.append(pattern)
         completions.append(completion)
     }
 

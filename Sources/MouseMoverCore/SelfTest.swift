@@ -28,6 +28,11 @@ final class RecordingMouseDriver: MouseDriver {
         positions.append(base.position())
     }
 
+    func glide(to point: Point, duration: Double) throws {
+        try base.glide(to: point, duration: duration)
+        positions.append(base.position())
+    }
+
     func click() throws { try base.click() }
     func sleep(_ seconds: Double) { base.sleep(seconds) }
 }

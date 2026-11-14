@@ -5,25 +5,49 @@ enum Log {
     static let core = Logger(subsystem: "com.pudeldoodle.MouseMover", category: "core")
 }
 
+/// Facon de choisir le motif joue a chaque cycle.
+public enum PatternMode: String, Codable, CaseIterable, Sendable {
+    /// Toujours le meme motif.
+    case single
+    /// Un motif tire au hasard parmi ceux coches.
+    case random
+    /// Les motifs coches, chacun son tour.
+    case sequence
+}
+
 public struct MouseMoverConfig: Codable, Equatable {
     public static let defaultIntervalSeconds = 300
+    public static let defaultPatternIDs = [MousePattern.classic.id]
 
     public var intervalSeconds: Int
     public var launchAtLogin: Bool
     public var displayID: UInt32?
+    /// Motifs crees par l'utilisateur (les motifs integres ne sont jamais enregistres).
+    public var patterns: [MousePattern]
+    public var patternMode: PatternMode
+    public var selectedPatternIDs: [String]
 
     public init(intervalSeconds: Int = MouseMoverConfig.defaultIntervalSeconds,
                 launchAtLogin: Bool = false,
-                displayID: UInt32? = nil) {
+                displayID: UInt32? = nil,
+                patterns: [MousePattern] = [],
+                patternMode: PatternMode = .single,
+                selectedPatternIDs: [String] = MouseMoverConfig.defaultPatternIDs) {
         self.intervalSeconds = intervalSeconds
         self.launchAtLogin = launchAtLogin
         self.displayID = displayID
+        self.patterns = patterns
+        self.patternMode = patternMode
+        self.selectedPatternIDs = selectedPatternIDs
     }
 
     enum CodingKeys: String, CodingKey {
         case intervalSeconds = "interval_seconds"
         case launchAtLogin = "launch_at_login"
         case displayID = "display_id"
+        case patterns
+        case patternMode = "pattern_mode"
+        case selectedPatternIDs = "selected_pattern_ids"
     }
 
     public init(from decoder: Decoder) throws {
@@ -40,6 +64,13 @@ public struct MouseMoverConfig: Codable, Equatable {
 
         self.launchAtLogin = (try? container.decodeIfPresent(Bool.self, forKey: .launchAtLogin)) ?? false
         self.displayID = (try? container.decodeIfPresent(UInt32.self, forKey: .displayID)) ?? nil
+
+        let patterns = (try? container.decodeIfPresent([Lossy<MousePattern>].self, forKey: .patterns)) ?? []
+        var seen = Set<String>()
+        self.patterns = patterns.compactMap(\.value).filter { !$0.isBuiltIn && seen.insert($0.id).inserted }
+        self.patternMode = (try? container.decodeIfPresent(PatternMode.self, forKey: .patternMode)) ?? .single
+        let selected = (try? container.decodeIfPresent([String].self, forKey: .selectedPatternIDs)) ?? nil
+        self.selectedPatternIDs = selected ?? Self.defaultPatternIDs
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -47,6 +78,9 @@ public struct MouseMoverConfig: Codable, Equatable {
         try container.encode(intervalSeconds, forKey: .intervalSeconds)
         try container.encode(launchAtLogin, forKey: .launchAtLogin)
         try container.encode(displayID, forKey: .displayID)
+        try container.encode(patterns, forKey: .patterns)
+        try container.encode(patternMode, forKey: .patternMode)
+        try container.encode(selectedPatternIDs, forKey: .selectedPatternIDs)
     }
 }
 
