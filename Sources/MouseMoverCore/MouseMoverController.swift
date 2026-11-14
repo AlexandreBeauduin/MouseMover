@@ -292,10 +292,10 @@ public final class MouseMoverController: ObservableObject {
         return savePattern(copy)
     }
 
-    /// Nouveau motif vide (a remplir dans l'editeur).
+    /// Nouveau motif (vide par defaut, a remplir dans l'editeur), avec un nom unique.
     @discardableResult
-    public func createPattern() -> MousePattern {
-        let pattern = MousePattern(name: uniqueName(base: "Nouveau motif"), points: [])
+    public func createPattern(named base: String = "Nouveau motif", points: [PatternPoint] = []) -> MousePattern {
+        let pattern = MousePattern(name: uniqueName(base: base), points: points)
         return savePattern(pattern) ?? pattern
     }
 

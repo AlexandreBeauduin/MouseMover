@@ -15,6 +15,8 @@ struct MouseMoverApp: App {
 
         let controller = MouseMoverController.shared
         controller.startTimer()
+        controller.onPatternsChanged = { MouseMoverShortcuts.updateAppShortcutParameters() }
+        MouseMoverShortcuts.updateAppShortcutParameters()
         if #available(macOS 27.0, *) { MouseMoverTimerIndexer.start() }
         AccessibilityPermission.requestPromptOnce()
 

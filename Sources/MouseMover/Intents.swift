@@ -47,6 +47,44 @@ struct DisplayEntityQuery: EntityQuery {
     }
 }
 
+// MARK: - Entite « Motif »
+
+struct PatternEntity: AppEntity {
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Motif"
+    static let defaultQuery = PatternEntityQuery()
+
+    let id: String
+    let name: String
+
+    var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(name)")
+    }
+}
+
+struct PatternEntityQuery: EntityStringQuery {
+    func entities(for identifiers: [String]) async throws -> [PatternEntity] {
+        await Self.allEntities().filter { identifiers.contains($0.id) }
+    }
+
+    func entities(matching string: String) async throws -> [PatternEntity] {
+        let query = string.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        return await Self.allEntities().filter {
+            $0.name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current).contains(query)
+        }
+    }
+
+    func suggestedEntities() async throws -> [PatternEntity] {
+        await Self.allEntities()
+    }
+
+    @MainActor
+    private static func allEntities() -> [PatternEntity] {
+        MouseMoverController.shared.patterns
+            .filter { !$0.points.isEmpty }
+            .map { PatternEntity(id: $0.id, name: $0.name) }
+    }
+}
+
 // MARK: - Intents
 
 struct StartMouseMoverIntent: AppIntent {
@@ -127,12 +165,34 @@ struct SetDisplayIntent: AppIntent {
     }
 }
 
+struct SetPatternIntent: AppIntent {
+    static let title: LocalizedStringResource = "Choisir le motif de MouseMover"
+    static let description = IntentDescription("Choisit le mouvement de souris joué à chaque cycle.")
+
+    @Parameter(title: "Motif")
+    var pattern: PatternEntity
+
+    static var parameterSummary: some ParameterSummary {
+        Summary("Utiliser le motif \(\.$pattern) pour MouseMover")
+    }
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        guard MouseMoverController.shared.usePattern(pattern.id) else {
+            throw IntentError.unknownPattern
+        }
+        return .result(dialog: "MouseMover joue maintenant le motif « \(pattern.name) ».")
+    }
+}
+
 enum IntentError: Error, CustomLocalizedStringResourceConvertible {
     case invalidMinutes
+    case unknownPattern
 
     var localizedStringResource: LocalizedStringResource {
         switch self {
         case .invalidMinutes: "Entre un nombre de minutes supérieur à 0."
+        case .unknownPattern: "Ce motif n'existe plus."
         }
     }
 }
@@ -181,5 +241,14 @@ struct MouseMoverShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Choisir l'écran",
             systemImageName: "display")
+
+        AppShortcut(
+            intent: SetPatternIntent(),
+            phrases: [
+                "Utilise le motif \(\.$pattern) avec \(.applicationName)",
+                "Change le motif de \(.applicationName) pour \(\.$pattern)",
+            ],
+            shortTitle: "Choisir le motif",
+            systemImageName: "scribble.variable")
     }
 }

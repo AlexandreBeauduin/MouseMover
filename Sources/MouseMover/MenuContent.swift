@@ -22,6 +22,27 @@ struct MenuContent: View {
                 set: { _ in UserPrompts.askCustomInterval(controller: controller) }))
         }
 
+        Menu(patternMenuTitle) {
+            ForEach(PatternMode.allCases, id: \.self) { mode in
+                Toggle(Self.title(for: mode), isOn: Binding(
+                    get: { controller.patternMode == mode },
+                    set: { _ in controller.setPatternMode(mode) }))
+            }
+
+            Divider()
+
+            ForEach(controller.patterns) { pattern in
+                Toggle(pattern.name, isOn: Binding(
+                    get: { controller.isPatternSelected(pattern.id) },
+                    set: { _ in controller.togglePattern(pattern.id) }))
+                    .disabled(pattern.points.isEmpty)
+            }
+
+            Divider()
+
+            Button("Gérer les motifs…") { PatternEditorWindow.shared.show() }
+        }
+
         Menu("Écran") {
             Toggle("Suivre l'écran principal (auto)", isOn: Binding(
                 get: { controller.selectedDisplayID == nil },
@@ -56,6 +77,23 @@ struct MenuContent: View {
 
         Button("Quitter") { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
+    }
+
+    private var patternMenuTitle: String {
+        let selected = controller.selectedPatterns
+        switch controller.patternMode {
+        case .single: return "Motif : \(selected.first?.name ?? MousePattern.classic.name)"
+        case .random: return "Motif : \(selected.count) au hasard"
+        case .sequence: return "Motif : \(selected.count) chacun son tour"
+        }
+    }
+
+    static func title(for mode: PatternMode) -> String {
+        switch mode {
+        case .single: "Toujours le même"
+        case .random: "Au hasard parmi les cochés"
+        case .sequence: "Chacun son tour"
+        }
     }
 }
 
@@ -95,7 +133,7 @@ enum UserPrompts {
         NSWorkspace.shared.open(url)
     }
 
-    private static func show(title: String, message: String) {
+    static func show(title: String, message: String) {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = title
