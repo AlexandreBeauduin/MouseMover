@@ -7,6 +7,10 @@ APP="${1:?usage: verify_bundle.sh /path/to/MouseMover.app}"
 codesign --verify --deep --strict "$APP"
 ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")"
 [[ "$ID" == "io.github.alexandrebeauduin.MouseMover" ]] || { echo "Unexpected bundle ID: $ID" >&2; exit 1; }
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+EXPECTED="$(sed -nE 's/^[[:space:]]*MARKETING_VERSION:[[:space:]]*"?([^"]+)"?[[:space:]]*$/\1/p' "$(dirname "$0")/../project.yml" | head -1)"
+[[ "$VERSION" == "$EXPECTED" ]] || { echo "Version $VERSION does not match project.yml ($EXPECTED)" >&2; exit 1; }
+echo "Version: $VERSION"
 for arch in arm64 x86_64; do
   lipo "$APP/Contents/MacOS/MouseMover" -verify_arch "$arch" || { echo "Missing $arch slice" >&2; exit 1; }
 done

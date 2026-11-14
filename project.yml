@@ -46,6 +46,8 @@ targets:
       properties:
         CFBundleName: MouseMover
         CFBundleDisplayName: MouseMover
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, fr, nl, de]
         LSUIElement: true
