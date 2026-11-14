@@ -289,6 +289,7 @@ struct PatternDetailView: View {
         if let index = selection, draft.points.indices.contains(index) {
             PointInspector(point: $draft.points[index], index: index, count: draft.points.count,
                            shuffle: draft.shuffle, editable: editable,
+                           select: { selection = $0 },
                            move: { offset in movePoint(index, by: offset) },
                            delete: { deletePoint(index) })
         } else {
@@ -366,6 +367,19 @@ struct PatternCanvas: View {
     let aspectRatio: CGFloat
     let editable: Bool
 
+    /// Appui en cours sur une poignee : point vise, et si le geste est un simple clic ou un glisser.
+    private struct Press {
+        var target: Int
+        var wasSelected: Bool
+        var moved: Bool
+        var stack: [Int]
+    }
+
+    @State private var press: Press?
+
+    private var dense: Bool { points.count > 40 }
+    private var diameter: CGFloat { dense ? 9 : 20 }
+
     var body: some View {
         GeometryReader { geometry in
             let size = geometry.size
@@ -394,6 +408,7 @@ struct PatternCanvas: View {
                 ForEach(points.indices, id: \.self) { index in
                     if index < points.count {
                         handle(index, size: size)
+                            .zIndex(selection == index ? 1 : 0)
                     }
                 }
             }
@@ -408,9 +423,8 @@ struct PatternCanvas: View {
 
     private func handle(_ index: Int, size: CGSize) -> some View {
         let point = points[index]
-        let dense = points.count > 40
-        let diameter: CGFloat = dense ? 9 : 20
         let selected = selection == index
+        let stack = overlapping(index, in: size)
         return ZStack {
             Circle()
                 .fill(index == 0 ? Color.green : point.click ? Color.orange : Color.accentColor)
@@ -432,18 +446,59 @@ struct PatternCanvas: View {
                     .offset(x: 6, y: -6)
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            if stack.count > 1, !dense {
+                Text("×\(stack.count)")
+                    .font(.system(size: 8, weight: .bold).monospacedDigit())
+                    .padding(.horizontal, 3)
+                    .background(Color(nsColor: .windowBackgroundColor), in: Capsule())
+                    .overlay(Capsule().strokeBorder(Color(nsColor: .separatorColor)))
+                    .offset(x: 9, y: 6)
+            }
+        }
         .contentShape(Circle().inset(by: -4))
         .position(Self.location(of: point, in: size))
         .gesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .named("canvas"))
                 .onChanged { value in
-                    selection = index
-                    guard editable, points.indices.contains(index),
+                    if press == nil {
+                        // Sur une pile de points, on garde le point deja selectionne s'il en fait partie.
+                        let target = selection.flatMap { stack.contains($0) ? $0 : nil } ?? index
+                        press = Press(target: target, wasSelected: selection == target, moved: false, stack: stack)
+                        selection = target
+                    }
+                    guard var current = press, editable, points.indices.contains(current.target),
                           hypot(value.translation.width, value.translation.height) > 1 else { return }
-                    points[index].x = Self.fraction(value.location.x, of: size.width)
-                    points[index].y = Self.fraction(value.location.y, of: size.height)
+                    current.moved = true
+                    press = current
+                    points[current.target].x = Self.fraction(value.location.x, of: size.width)
+                    points[current.target].y = Self.fraction(value.location.y, of: size.height)
+                }
+                .onEnded { _ in
+                    defer { press = nil }
+                    // Un clic sur un point deja selectionne d'une pile passe au point suivant de la pile.
+                    guard let current = press, !current.moved, current.wasSelected, current.stack.count > 1,
+                          let position = current.stack.firstIndex(of: current.target) else { return }
+                    selection = current.stack[(position + 1) % current.stack.count]
                 })
-        .help(point.click ? "Point \(index + 1) (clic)" : "Point \(index + 1)")
+        .help(help(for: index, stack: stack))
+    }
+
+    /// Les points dont la poignee recouvre celle de `index` (lui compris), dans l'ordre de jeu.
+    private func overlapping(_ index: Int, in size: CGSize) -> [Int] {
+        let center = Self.location(of: points[index], in: size)
+        let limit = diameter * 0.75
+        return points.indices.filter { other in
+            let location = Self.location(of: points[other], in: size)
+            return hypot(location.x - center.x, location.y - center.y) < limit
+        }
+    }
+
+    private func help(for index: Int, stack: [Int]) -> String {
+        let name = points[index].click ? "Point \(index + 1) (clic)" : "Point \(index + 1)"
+        guard stack.count > 1 else { return name }
+        let numbers = stack.map { String($0 + 1) }.formatted(.list(type: .and))
+        return "Points \(numbers) superposés · clique encore pour passer de l'un à l'autre"
     }
 
     private func addPoint(at location: CGPoint, in size: CGSize) {
@@ -474,12 +529,45 @@ struct PointInspector: View {
     let count: Int
     let shuffle: Bool
     let editable: Bool
+    let select: (Int) -> Void
     let move: (Int) -> Void
     let delete: () -> Void
 
     var body: some View {
+        VStack(spacing: 0) {
+            navigation
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+            form
+        }
+    }
+
+    /// Passe d'un point a l'autre sans toucher au cadre (utile quand des points se superposent).
+    private var navigation: some View {
+        HStack {
+            Button { select(index - 1) } label: { Image(systemName: "chevron.left") }
+                .disabled(index == 0)
+                .help("Point précédent")
+            Spacer()
+            Menu("Point \(index + 1) sur \(count)") {
+                ForEach(0..<count, id: \.self) { other in
+                    Button("Point \(other + 1)") { select(other) }
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .font(.headline)
+            Spacer()
+            Button { select(index + 1) } label: { Image(systemName: "chevron.right") }
+                .disabled(index == count - 1)
+                .help("Point suivant")
+        }
+        .buttonStyle(.borderless)
+    }
+
+    private var form: some View {
         Form {
-            Section("Point \(index + 1) sur \(count)") {
+            Section("Position") {
                 percentField("Horizontal", value: $point.x)
                 percentField("Vertical", value: $point.y)
                 Toggle("Cliquer à l'arrivée", isOn: $point.click)
