@@ -109,6 +109,9 @@ final class ControllerPatternTests: XCTestCase {
     }
 
     func testDuplicateGivesEditableCopyWithUniqueName() throws {
+        let saved = L10n.language
+        defer { L10n.language = saved }
+        L10n.language = .fr
         let c = makeController()
         let first = try XCTUnwrap(c.duplicatePattern("builtin.circle"))
         let second = try XCTUnwrap(c.duplicatePattern("builtin.circle"))

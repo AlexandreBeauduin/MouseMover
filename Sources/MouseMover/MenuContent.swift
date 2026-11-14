@@ -7,17 +7,17 @@ struct MenuContent: View {
 
     var body: some View {
         Button(controller.startStopTitle) { controller.toggle() }
-        Button("Exécuter maintenant") { controller.runNow() }
+        Button(L10n.runNow) { controller.runNow() }
 
         Divider()
 
-        Menu("Intervalle") {
+        Menu(L10n.interval) {
             ForEach(MouseMoverController.intervalPresets, id: \.seconds) { preset in
                 Toggle(preset.label, isOn: Binding(
                     get: { controller.interval == preset.seconds },
                     set: { _ in controller.setInterval(seconds: preset.seconds) }))
             }
-            Toggle("Personnalisé…", isOn: Binding(
+            Toggle(L10n.customInterval, isOn: Binding(
                 get: { controller.isCustomInterval },
                 set: { _ in UserPrompts.askCustomInterval(controller: controller) }))
         }
@@ -40,11 +40,11 @@ struct MenuContent: View {
 
             Divider()
 
-            Button("Gérer les motifs…") { PatternEditorWindow.shared.show() }
+            Button(L10n.managePatterns) { PatternEditorWindow.shared.show() }
         }
 
-        Menu("Écran") {
-            Toggle("Suivre l'écran principal (auto)", isOn: Binding(
+        Menu(L10n.display) {
+            Toggle(L10n.followMainDisplay, isOn: Binding(
                 get: { controller.selectedDisplayID == nil },
                 set: { _ in controller.selectDisplay(nil) }))
 
@@ -58,41 +58,48 @@ struct MenuContent: View {
 
             Divider()
 
-            Button("Actualiser la liste des écrans") { controller.refreshDisplays() }
+            Button(L10n.refreshDisplays) { controller.refreshDisplays() }
         }
 
         Divider()
 
-        Toggle("Lancer au démarrage de session", isOn: Binding(
+        Toggle(L10n.launchAtLogin, isOn: Binding(
             get: { controller.launchAtLoginEnabled },
             set: { UserPrompts.setLaunchAtLogin($0, controller: controller) }))
 
         Button(controller.accessibilityTrusted
-               ? "Ouvrir Réglages Accessibilité…"
-               : "⚠︎ Autoriser l'Accessibilité…") {
+               ? L10n.openAccessibilitySettings
+               : L10n.allowAccessibility) {
             UserPrompts.openAccessibilitySettings()
+        }
+
+        Picker(L10n.languageMenu, selection: Binding(
+            get: { controller.languageChoice },
+            set: { controller.setLanguage($0) })) {
+            Text(L10n.systemLanguage).tag("")
+            ForEach(Language.allCases, id: \.rawValue) { Text($0.nativeName).tag($0.rawValue) }
         }
 
         Divider()
 
-        Button("Quitter") { NSApplication.shared.terminate(nil) }
+        Button(L10n.quit) { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
     }
 
     private var patternMenuTitle: String {
         let selected = controller.selectedPatterns
         switch controller.patternMode {
-        case .single: return "Motif : \(selected.first?.name ?? MousePattern.classic.name)"
-        case .random: return "Motif : \(selected.count) au hasard"
-        case .sequence: return "Motif : \(selected.count) chacun son tour"
+        case .single: return L10n.patternMenuSingle(selected.first?.name ?? MousePattern.classic.name)
+        case .random: return L10n.patternMenuRandom(selected.count)
+        case .sequence: return L10n.patternMenuSequence(selected.count)
         }
     }
 
     static func title(for mode: PatternMode) -> String {
         switch mode {
-        case .single: "Toujours le même"
-        case .random: "Au hasard parmi les cochés"
-        case .sequence: "Chacun son tour"
+        case .single: L10n.modeSingle
+        case .random: L10n.modeRandom
+        case .sequence: L10n.modeSequence
         }
     }
 }
@@ -106,24 +113,23 @@ enum UserPrompts {
         field.stringValue = String(controller.interval / 60)
 
         let alert = NSAlert()
-        alert.messageText = "Intervalle personnalisé"
-        alert.informativeText = "Durée en minutes entre deux activités :"
+        alert.messageText = L10n.customIntervalTitle
+        alert.informativeText = L10n.customIntervalPrompt
         alert.accessoryView = field
-        alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Annuler")
+        alert.addButton(withTitle: L10n.ok)
+        alert.addButton(withTitle: L10n.cancel)
         alert.window.initialFirstResponder = field
 
         guard alert.runModal() == .alertFirstButtonReturn else { return }
 
         if !controller.setCustomInterval(minutesText: field.stringValue) {
-            show(title: "Valeur invalide", message: "Entre un nombre de minutes supérieur à 0.")
+            show(title: L10n.invalidValue, message: L10n.invalidMinutes)
         }
     }
 
     static func setLaunchAtLogin(_ enabled: Bool, controller: MouseMoverController) {
         if case .failure(let error) = controller.setLaunchAtLogin(enabled) {
-            show(title: "Indisponible",
-                 message: "Impossible de modifier le lancement au démarrage : \(error.message)")
+            show(title: L10n.unavailable, message: L10n.launchAtLoginFailed(error.message))
         }
     }
 
@@ -138,7 +144,7 @@ enum UserPrompts {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: L10n.ok)
         alert.runModal()
     }
 }

@@ -1,0 +1,26 @@
+/* App Intents metadata (titles, descriptions, parameters, summaries). Source strings are in Intents.swift. */
+
+"Display" = "Bildschirm";
+"Pattern" = "Muster";
+"Start MouseMover" = "MouseMover starten";
+"Starts moving the mouse automatically." = "Startet die automatische Mausbewegung.";
+"Stop MouseMover" = "MouseMover stoppen";
+"Pauses the automatic mouse movement." = "Pausiert die automatische Mausbewegung.";
+"Run MouseMover Now" = "MouseMover jetzt ausführen";
+"Runs a mouse activity cycle right away." = "Führt sofort einen Mausaktivitätszyklus aus.";
+"Set MouseMover Interval" = "Intervall von MouseMover festlegen";
+"Sets the time, in minutes, between two activities." = "Legt die Zeit in Minuten zwischen zwei Aktivitäten fest.";
+"Minutes" = "Minuten";
+"Time between two activities, in minutes." = "Zeit zwischen zwei Aktivitäten, in Minuten.";
+"Set MouseMover interval to ${minutes} minutes" = "Intervall von MouseMover auf ${minutes} Minuten festlegen";
+"Choose MouseMover Display" = "Bildschirm von MouseMover wählen";
+"Chooses the display on which the mouse moves." = "Wählt den Bildschirm, auf dem sich die Maus bewegt.";
+"Use ${display} for MouseMover" = "${display} für MouseMover verwenden";
+"Choose MouseMover Pattern" = "Muster von MouseMover wählen";
+"Chooses the mouse movement played on each cycle." = "Wählt die Mausbewegung, die bei jedem Zyklus abgespielt wird.";
+"Use the ${pattern} pattern for MouseMover" = "Das Muster ${pattern} für MouseMover verwenden";
+"Start" = "Starten";
+"Stop" = "Stoppen";
+"Run Now" = "Jetzt ausführen";
+"Choose Display" = "Bildschirm wählen";
+"Choose Pattern" = "Muster wählen";

@@ -2,7 +2,7 @@ name: MouseMover
 
 options:
   bundleIdPrefix: com.pudeldoodle
-  developmentLanguage: fr
+  developmentLanguage: en
   createIntermediateGroups: true
   deploymentTarget:
     macOS: "14.0"
@@ -44,11 +44,11 @@ targets:
       properties:
         CFBundleName: MouseMover
         CFBundleDisplayName: MouseMover
-        CFBundleDevelopmentRegion: fr
-        CFBundleLocalizations: [fr]
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, fr, nl, de]
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
-        NSHumanReadableCopyright: "MouseMover"
+        NSHumanReadableCopyright: "© 2026 Alexandre Beauduin — MIT License"
     settings:
       base:
         PRODUCT_NAME: MouseMover

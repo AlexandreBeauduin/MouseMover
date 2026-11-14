@@ -11,11 +11,12 @@ final class PatternEditorWindow {
 
     let model = PatternEditorModel()
     private var window: NSWindow?
-    private var busyObserver: AnyCancellable?
+    private var observers: Set<AnyCancellable> = []
 
     func show(selecting id: String? = nil) {
         let window = self.window ?? makeWindow()
         if let id { model.selectedID = id }
+        window.title = L10n.editorTitle
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
     }
@@ -32,15 +33,19 @@ final class PatternEditorWindow {
             contentRect: NSRect(x: 0, y: 0, width: 980, height: 620),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered, defer: false)
-        window.title = "Motifs de souris"
+        window.title = L10n.editorTitle
         window.isReleasedWhenClosed = false
         window.contentView = hosting
         window.center()
         window.setFrameAutosaveName("PatternEditor")
         // Pendant un cycle la souris traverse l'ecran (et clique parfois) : la fenetre ne doit pas reagir.
-        busyObserver = controller.$isBusy.sink { [weak window] busy in
+        controller.$isBusy.sink { [weak window] busy in
             window?.ignoresMouseEvents = busy
-        }
+        }.store(in: &observers)
+        // @Published emits before the new language is applied: read it on the next run loop turn.
+        controller.$languageChoice.receive(on: RunLoop.main).sink { [weak window] _ in
+            window?.title = L10n.editorTitle
+        }.store(in: &observers)
         self.window = window
         return window
     }
@@ -67,7 +72,7 @@ struct PatternEditorView: View {
                     PatternDetailView(controller: controller, model: model, pattern: pattern)
                         .id(pattern.id)
                 } else {
-                    Text("Choisis un motif dans la liste.")
+                    Text(L10n.choosePattern)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -75,6 +80,7 @@ struct PatternEditorView: View {
             .frame(minWidth: 640, maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minHeight: 520)
+        .environment(\.locale, L10n.locale)
     }
 
     private var selectedPattern: MousePattern? {
@@ -84,13 +90,13 @@ struct PatternEditorView: View {
     private var sidebar: some View {
         VStack(spacing: 0) {
             List(selection: $model.selectedID) {
-                Section("Intégrés") {
+                Section(L10n.builtInSection) {
                     ForEach(controller.patterns.filter(\.isBuiltIn)) { row($0) }
                 }
-                Section("Mes motifs") {
+                Section(L10n.myPatterns) {
                     ForEach(controller.customPatterns) { row($0) }
                     if controller.customPatterns.isEmpty {
-                        Text("Aucun pour l'instant")
+                        Text(L10n.noneYet)
                             .foregroundStyle(.secondary)
                             .selectionDisabled()
                     }
@@ -104,7 +110,7 @@ struct PatternEditorView: View {
                 Button { model.selectedID = controller.createPattern().id } label: {
                     Image(systemName: "plus").frame(width: 22, height: 18)
                 }
-                .help("Nouveau motif")
+                .help(L10n.newPattern)
 
                 Button {
                     if let id = model.selectedID, let copy = controller.duplicatePattern(id) {
@@ -113,13 +119,13 @@ struct PatternEditorView: View {
                 } label: {
                     Image(systemName: "plus.square.on.square").frame(width: 22, height: 18)
                 }
-                .help("Dupliquer le motif")
+                .help(L10n.duplicatePattern)
                 .disabled(selectedPattern == nil)
 
                 Button { confirmDelete = true } label: {
                     Image(systemName: "minus").frame(width: 22, height: 18)
                 }
-                .help("Supprimer le motif")
+                .help(L10n.deletePattern)
                 .disabled(selectedPattern?.isBuiltIn ?? true)
 
                 Spacer()
@@ -128,15 +134,15 @@ struct PatternEditorView: View {
             .padding(6)
         }
         .confirmationDialog(
-            "Supprimer « \(selectedPattern?.name ?? "") » ?", isPresented: $confirmDelete
+            L10n.confirmDelete(selectedPattern?.name ?? ""), isPresented: $confirmDelete
         ) {
-            Button("Supprimer", role: .destructive) {
+            Button(L10n.delete, role: .destructive) {
                 guard let id = model.selectedID else { return }
                 controller.deletePattern(id)
                 model.selectedID = controller.customPatterns.last?.id ?? MousePattern.classic.id
             }
         } message: {
-            Text("Le motif sera définitivement supprimé.")
+            Text(L10n.deleteWarning)
         }
     }
 
@@ -147,7 +153,7 @@ struct PatternEditorView: View {
             if controller.isPatternSelected(pattern.id) {
                 Image(systemName: "checkmark")
                     .foregroundStyle(.secondary)
-                    .help("Utilisé par MouseMover")
+                    .help(L10n.usedByMouseMover)
             }
         }
         .tag(pattern.id)
@@ -177,9 +183,9 @@ struct PatternDetailView: View {
             if !editable {
                 HStack {
                     Image(systemName: "lock.fill").foregroundStyle(.secondary)
-                    Text("Motif intégré : il n'est pas modifiable.")
+                    Text(L10n.builtInLocked)
                     Spacer()
-                    Button("Dupliquer pour modifier") {
+                    Button(L10n.duplicateToEdit) {
                         if let copy = controller.duplicatePattern(draft.id) { model.selectedID = copy.id }
                     }
                 }
@@ -207,7 +213,7 @@ struct PatternDetailView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            TextField("Nom du motif", text: $draft.name)
+            TextField(L10n.patternName, text: $draft.name)
                 .textFieldStyle(.plain)
                 .font(.title2.weight(.semibold))
                 .disabled(!editable)
@@ -215,45 +221,45 @@ struct PatternDetailView: View {
             Spacer()
 
             if controller.isPatternSelected(draft.id) {
-                Label("Utilisé", systemImage: "checkmark.circle.fill")
+                Label(L10n.inUse, systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.secondary)
             } else {
-                Button("Utiliser ce motif") { controller.usePattern(draft.id) }
+                Button(L10n.useThisPattern) { controller.usePattern(draft.id) }
                     .disabled(draft.points.isEmpty)
-                    .help("MouseMover jouera uniquement ce motif.")
+                    .help(L10n.useThisPatternHelp)
             }
 
-            Menu("Capturer un geste") {
+            Menu(L10n.captureGesture) {
                 ForEach([5, 10, 15], id: \.self) { seconds in
-                    Button("Pendant \(seconds) secondes") { capture(seconds: seconds) }
+                    Button(L10n.captureFor(seconds)) { capture(seconds: seconds) }
                 }
             }
             .fixedSize()
-            .help("Enregistre tes propres mouvements de souris et clics dans un nouveau motif.")
+            .help(L10n.captureHelp)
 
             Button {
                 flushSave()
                 controller.runPattern(draft)
             } label: {
-                Label("Tester", systemImage: "play.fill")
+                Label(L10n.test, systemImage: "play.fill")
             }
             .disabled(draft.points.isEmpty || controller.isBusy)
-            .help("Joue le motif tout de suite (souris dans un coin pour l'interrompre).")
+            .help(L10n.testHelp)
         }
     }
 
     private var options: some View {
         HStack(spacing: 16) {
-            Picker("Repère", selection: $draft.anchor) {
-                Text("Sur l'écran").tag(PatternAnchor.screen)
-                Text("Autour du curseur").tag(PatternAnchor.cursor)
+            Picker(L10n.anchor, selection: $draft.anchor) {
+                Text(L10n.anchorScreen).tag(PatternAnchor.screen)
+                Text(L10n.anchorCursor).tag(PatternAnchor.cursor)
             }
             .pickerStyle(.segmented)
             .fixedSize()
-            .help("Autour du curseur : le centre du cadre est la position du curseur au début du cycle.")
+            .help(L10n.anchorHelp)
 
-            Toggle("Ordre aléatoire", isOn: $draft.shuffle)
-                .help("Mélange l'ordre des points à chaque cycle (sauf ceux qui gardent leur place).")
+            Toggle(L10n.shuffle, isOn: $draft.shuffle)
+                .help(L10n.shuffleHelp)
         }
         .disabled(!editable)
     }
@@ -261,9 +267,9 @@ struct PatternDetailView: View {
     private var footer: String {
         let count = draft.points.count
         let base = count == 0
-            ? "Clique dans le cadre pour ajouter un point, ou capture un geste."
-            : "\(count) point\(count > 1 ? "s" : "") · environ \(Self.format(estimatedDuration)) s par cycle"
-        return editable && count > 0 ? base + " · clic : ajouter · glisser : déplacer" : base
+            ? L10n.emptyCanvasHint
+            : L10n.patternSummary(points: count, seconds: Self.format(estimatedDuration))
+        return editable && count > 0 ? base + L10n.canvasEditHint : base
     }
 
     private var estimatedDuration: Double {
@@ -294,8 +300,8 @@ struct PatternDetailView: View {
                            delete: { deletePoint(index) })
         } else {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Aucun point sélectionné").font(.headline)
-                Text("Chaque point est une étape : la souris s'y rend, attend éventuellement, puis clique si demandé. Les points sont joués dans l'ordre de leur numéro.")
+                Text(L10n.noPointSelected).font(.headline)
+                Text(L10n.pointsExplanation)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer()
@@ -345,16 +351,15 @@ struct PatternDetailView: View {
             PatternEditorWindow.shared.show()
             guard let pattern else { return }
             guard !pattern.points.isEmpty else {
-                UserPrompts.show(title: "Aucun mouvement enregistré",
-                                 message: "Bouge la souris après le compte à rebours pour enregistrer un geste.")
+                UserPrompts.show(title: L10n.noMovementRecorded, message: L10n.noMovementHint)
                 return
             }
-            model.selectedID = controller.createPattern(named: "Geste enregistré", points: pattern.points).id
+            model.selectedID = controller.createPattern(named: L10n.recordedGesture, points: pattern.points).id
         }
     }
 
     static func format(_ value: Double) -> String {
-        value.formatted(.number.precision(.fractionLength(0...1)))
+        value.formatted(.number.precision(.fractionLength(0...1)).locale(L10n.locale))
     }
 }
 
@@ -394,7 +399,7 @@ struct PatternCanvas: View {
                         .font(.title2)
                         .foregroundStyle(.secondary)
                         .position(x: size.width / 2 + 4, y: size.height / 2 + 8)
-                        .help("Position du curseur au début du cycle")
+                        .help(L10n.cursorStartHelp)
                 }
 
                 Path { path in
@@ -432,7 +437,7 @@ struct PatternCanvas: View {
                 Circle().strokeBorder(Color.primary, lineWidth: 2)
             }
             if !dense {
-                Text("\(index + 1)")
+                Text(verbatim: "\(index + 1)")
                     .font(.system(size: 10, weight: .bold).monospacedDigit())
                     .foregroundStyle(.white)
             }
@@ -448,7 +453,7 @@ struct PatternCanvas: View {
         }
         .overlay(alignment: .bottomTrailing) {
             if stack.count > 1, !dense {
-                Text("×\(stack.count)")
+                Text(verbatim: "×\(stack.count)")
                     .font(.system(size: 8, weight: .bold).monospacedDigit())
                     .padding(.horizontal, 3)
                     .background(Color(nsColor: .windowBackgroundColor), in: Capsule())
@@ -495,10 +500,9 @@ struct PatternCanvas: View {
     }
 
     private func help(for index: Int, stack: [Int]) -> String {
-        let name = points[index].click ? "Point \(index + 1) (clic)" : "Point \(index + 1)"
+        let name = points[index].click ? L10n.clickPoint(index + 1) : L10n.point(index + 1)
         guard stack.count > 1 else { return name }
-        let numbers = stack.map { String($0 + 1) }.formatted(.list(type: .and))
-        return "Points \(numbers) superposés · clique encore pour passer de l'un à l'autre"
+        return L10n.overlappingPoints(stack.map { $0 + 1 })
     }
 
     private func addPoint(at location: CGPoint, in size: CGSize) {
@@ -547,11 +551,11 @@ struct PointInspector: View {
         HStack {
             Button { select(index - 1) } label: { Image(systemName: "chevron.left") }
                 .disabled(index == 0)
-                .help("Point précédent")
+                .help(L10n.previousPoint)
             Spacer()
-            Menu("Point \(index + 1) sur \(count)") {
+            Menu(L10n.pointOf(index + 1, count)) {
                 ForEach(0..<count, id: \.self) { other in
-                    Button("Point \(other + 1)") { select(other) }
+                    Button(L10n.point(other + 1)) { select(other) }
                 }
             }
             .menuStyle(.borderlessButton)
@@ -560,52 +564,52 @@ struct PointInspector: View {
             Spacer()
             Button { select(index + 1) } label: { Image(systemName: "chevron.right") }
                 .disabled(index == count - 1)
-                .help("Point suivant")
+                .help(L10n.nextPoint)
         }
         .buttonStyle(.borderless)
     }
 
     private var form: some View {
         Form {
-            Section("Position") {
-                percentField("Horizontal", value: $point.x)
-                percentField("Vertical", value: $point.y)
-                Toggle("Cliquer à l'arrivée", isOn: $point.click)
+            Section(L10n.position) {
+                percentField(L10n.horizontal, value: $point.x)
+                percentField(L10n.vertical, value: $point.y)
+                Toggle(L10n.clickOnArrival, isOn: $point.click)
                 if shuffle {
-                    Toggle("Garder sa place", isOn: $point.fixed)
-                        .help("Ce point n'est pas mélangé avec les autres.")
+                    Toggle(L10n.keepPlace, isOn: $point.fixed)
+                        .help(L10n.keepPlaceHelp)
                 }
             }
 
-            Section("Pause à l'arrivée") {
-                Toggle("Attendre", isOn: Binding(
+            Section(L10n.pauseOnArrival) {
+                Toggle(L10n.wait, isOn: Binding(
                     get: { point.pause != nil },
                     set: { point.pause = $0 ? PauseRange(min: 0.2, max: 0.5) : nil }))
                 if let pause = point.pause {
-                    secondsField("Au moins", value: Binding(
+                    secondsField(L10n.atLeast, value: Binding(
                         get: { pause.min },
                         set: { point.pause = PauseRange(min: $0, max: max($0, point.pause?.max ?? $0)) }))
-                    secondsField("Au plus", value: Binding(
+                    secondsField(L10n.atMost, value: Binding(
                         get: { pause.max },
                         set: { point.pause = PauseRange(min: min($0, point.pause?.min ?? $0), max: $0) }))
                 }
             }
 
-            Section("Trajet jusqu'au point") {
-                Toggle("Durée imposée", isOn: Binding(
+            Section(L10n.pathToPoint) {
+                Toggle(L10n.fixedDuration, isOn: Binding(
                     get: { point.duration != nil },
                     set: { point.duration = $0 ? 0.4 : nil }))
                 if let duration = point.duration {
                     Slider(value: Binding(get: { duration }, set: { point.duration = ($0 * 100).rounded() / 100 }),
                            in: MousePattern.durationRange) {
-                        Text("\(PatternDetailView.format(duration)) s")
+                        Text(verbatim: "\(PatternDetailView.format(duration)) s")
                             .monospacedDigit()
                             .frame(width: 44, alignment: .leading)
                     }
-                    Text("Trajet en ligne droite, à vitesse constante.")
+                    Text(L10n.straightPath)
                         .font(.caption).foregroundStyle(.secondary)
                 } else {
-                    Text("Durée et courbe au hasard, comme une main.")
+                    Text(L10n.humanPath)
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -613,13 +617,13 @@ struct PointInspector: View {
             Section {
                 HStack {
                     Button { move(-1) } label: { Image(systemName: "arrow.up") }
-                        .help("Jouer ce point plus tôt")
+                        .help(L10n.playEarlier)
                         .disabled(index == 0)
                     Button { move(1) } label: { Image(systemName: "arrow.down") }
-                        .help("Jouer ce point plus tard")
+                        .help(L10n.playLater)
                         .disabled(index == count - 1)
                     Spacer()
-                    Button("Supprimer", role: .destructive, action: delete)
+                    Button(L10n.delete, role: .destructive, action: delete)
                 }
             }
         }
@@ -637,7 +641,7 @@ struct PointInspector: View {
                     .labelsHidden()
                     .multilineTextAlignment(.trailing)
                     .frame(width: 56)
-                Text("%").foregroundStyle(.secondary)
+                Text(verbatim: "%").foregroundStyle(.secondary)
             }
         }
     }
@@ -652,7 +656,7 @@ struct PointInspector: View {
                     .labelsHidden()
                     .multilineTextAlignment(.trailing)
                     .frame(width: 56)
-                Text("s").foregroundStyle(.secondary)
+                Text(verbatim: "s").foregroundStyle(.secondary)
             }
         }
     }

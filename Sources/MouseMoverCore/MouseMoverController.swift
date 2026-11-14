@@ -37,9 +37,11 @@ public final class CountdownState: ObservableObject {
 
 @MainActor
 public final class MouseMoverController: ObservableObject {
-    public static let intervalPresets: [(label: String, seconds: Int)] = [
-        ("1 min", 60), ("3 min", 180), ("5 min", 300), ("10 min", 600), ("15 min", 900),
-    ]
+    public static let intervalPresetMinutes = [1, 3, 5, 10, 15]
+
+    public static var intervalPresets: [(label: String, seconds: Int)] {
+        intervalPresetMinutes.map { (L10n.minutesShort($0), $0 * 60) }
+    }
 
     public static let shared = MouseMoverController()
 
@@ -55,6 +57,8 @@ public final class MouseMoverController: ObservableObject {
     @Published public private(set) var patterns: [MousePattern]
     @Published public private(set) var patternMode: PatternMode
     @Published public private(set) var selectedPatternIDs: [String]
+    /// Language menu choice: a `Language` raw value, or "" to follow the system.
+    @Published public private(set) var languageChoice: String
 
     private var config: MouseMoverConfig
     private let configStore: ConfigStore
@@ -63,6 +67,8 @@ public final class MouseMoverController: ObservableObject {
     private let loginItem: LoginItemManaging
     private let accessibilityCheck: () -> Bool
     private let random: RandomSource
+    private let defaults: UserDefaults
+    static let languageKey = "language"
     private var timer: Timer?
     private var sequenceIndex = 0
     /// Appele apres chaque changement de la liste des motifs (ex. : rafraichir les parametres Siri).
@@ -73,7 +79,8 @@ public final class MouseMoverController: ObservableObject {
                 cycleRunner: CycleRunning = SystemCycleRunner(),
                 loginItem: LoginItemManaging = SystemLoginItem(),
                 accessibilityCheck: @escaping () -> Bool = { AXIsProcessTrusted() },
-                random: RandomSource = SystemRandom()) {
+                random: RandomSource = SystemRandom(),
+                defaults: UserDefaults = .standard) {
         let config = configStore.load()
         self.config = config
         self.configStore = configStore
@@ -82,6 +89,8 @@ public final class MouseMoverController: ObservableObject {
         self.loginItem = loginItem
         self.accessibilityCheck = accessibilityCheck
         self.random = random
+        self.defaults = defaults
+        self.languageChoice = defaults.string(forKey: Self.languageKey) ?? ""
 
         self.interval = config.intervalSeconds
         self.countdown = CountdownState(remaining: config.intervalSeconds)
@@ -104,13 +113,13 @@ public final class MouseMoverController: ObservableObject {
     // MARK: - Etat affiche
 
     public var statusTitle: String {
-        guard isRunning else { return "🖱 pause" }
+        guard isRunning else { return "🖱 \(L10n.paused)" }
         let seconds = max(remaining, 0)
         return String(format: "🖱 %02d:%02d", seconds / 60, seconds % 60)
     }
 
     public var startStopTitle: String {
-        isRunning ? "Arrêter" : "Démarrer"
+        isRunning ? L10n.stop : L10n.start
     }
 
     public var isCustomInterval: Bool {
@@ -288,13 +297,13 @@ public final class MouseMoverController: ObservableObject {
         guard let source = pattern(id: id) else { return nil }
         var copy = source
         copy.id = UUID().uuidString
-        copy.name = uniqueName(base: "\(source.name) (copie)")
+        copy.name = uniqueName(base: L10n.copyName(source.name))
         return savePattern(copy)
     }
 
     /// Nouveau motif (vide par defaut, a remplir dans l'editeur), avec un nom unique.
     @discardableResult
-    public func createPattern(named base: String = "Nouveau motif", points: [PatternPoint] = []) -> MousePattern {
+    public func createPattern(named base: String = L10n.newPattern, points: [PatternPoint] = []) -> MousePattern {
         let pattern = MousePattern(name: uniqueName(base: base), points: points)
         return savePattern(pattern) ?? pattern
     }
@@ -324,6 +333,27 @@ public final class MouseMoverController: ObservableObject {
     @discardableResult
     public func runPattern(_ pattern: MousePattern) -> Bool {
         triggerCycle(with: pattern.sanitized())
+    }
+
+    // MARK: - Language
+
+    /// Applies the stored Language menu choice (call once at launch).
+    public func applyLanguageChoice() {
+        L10n.apply(choice: languageChoice)
+        refreshLocalizedNames()
+    }
+
+    public func setLanguage(_ choice: String) {
+        let choice = Language(rawValue: choice)?.rawValue ?? ""
+        languageChoice = choice
+        defaults.set(choice, forKey: Self.languageKey)
+        applyLanguageChoice()
+    }
+
+    /// Re-reads the built-in patterns after a language change (their names are localized).
+    public func refreshLocalizedNames() {
+        patterns = MousePattern.builtIns + customPatterns
+        onPatternsChanged?()
     }
 
     private func uniqueName(base: String) -> String {

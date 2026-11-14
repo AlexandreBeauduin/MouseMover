@@ -102,7 +102,7 @@ public struct MousePattern: Codable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)
-        self.name = (try? container.decodeIfPresent(String.self, forKey: .name)) ?? "Motif"
+        self.name = (try? container.decodeIfPresent(String.self, forKey: .name)) ?? L10n.defaultPatternName
         self.anchor = (try? container.decodeIfPresent(PatternAnchor.self, forKey: .anchor)) ?? .screen
         self.shuffle = (try? container.decodeIfPresent(Bool.self, forKey: .shuffle)) ?? false
         let points = (try? container.decodeIfPresent([Lossy<PatternPoint>].self, forKey: .points)) ?? []
@@ -114,7 +114,7 @@ public struct MousePattern: Codable, Equatable, Identifiable, Sendable {
     public func sanitized() -> MousePattern {
         var copy = self
         copy.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if copy.name.isEmpty { copy.name = "Motif sans nom" }
+        if copy.name.isEmpty { copy.name = L10n.untitledPattern }
         copy.points = points.prefix(Self.maxPoints).compactMap { point in
             guard point.x.isFinite, point.y.isFinite else { return nil }
             var point = point
@@ -162,40 +162,48 @@ extension MousePattern {
     static let builtInPrefix = "builtin."
 
     /// Le cycle historique : centre, clic, quatre coins dans un ordre aleatoire, retour au centre.
-    public static let classic = MousePattern(
-        id: "builtin.classic", name: "Classique", shuffle: true,
-        points: [
-            PatternPoint(x: 0.5, y: 0.5, click: true, pause: PauseRange(min: 0.08, max: 0.18), fixed: true),
-            PatternPoint(x: 0, y: 1, pause: PauseRange(min: 0.05, max: 0.25)),
-            PatternPoint(x: 0, y: 0, pause: PauseRange(min: 0.05, max: 0.25)),
-            PatternPoint(x: 1, y: 0, pause: PauseRange(min: 0.05, max: 0.25)),
-            PatternPoint(x: 1, y: 1, pause: PauseRange(min: 0.05, max: 0.25)),
-            PatternPoint(x: 0.5, y: 0.5, fixed: true),
-        ])
+    public static var classic: MousePattern {
+        MousePattern(
+            id: "builtin.classic", name: L10n.patternClassic, shuffle: true,
+            points: [
+                PatternPoint(x: 0.5, y: 0.5, click: true, pause: PauseRange(min: 0.08, max: 0.18), fixed: true),
+                PatternPoint(x: 0, y: 1, pause: PauseRange(min: 0.05, max: 0.25)),
+                PatternPoint(x: 0, y: 0, pause: PauseRange(min: 0.05, max: 0.25)),
+                PatternPoint(x: 1, y: 0, pause: PauseRange(min: 0.05, max: 0.25)),
+                PatternPoint(x: 1, y: 1, pause: PauseRange(min: 0.05, max: 0.25)),
+                PatternPoint(x: 0.5, y: 0.5, fixed: true),
+            ])
+    }
 
     /// Quelques pixels autour du curseur, sans clic, puis retour exact a sa position.
-    public static let discreet = MousePattern(
-        id: "builtin.discreet", name: "Discret", anchor: .cursor,
-        points: [
-            PatternPoint(x: 0.502, y: 0.5, duration: 0.12),
-            PatternPoint(x: 0.502, y: 0.503, duration: 0.12),
-            PatternPoint(x: 0.499, y: 0.502, duration: 0.12),
-            PatternPoint(x: 0.5, y: 0.5, duration: 0.12),
-        ])
+    public static var discreet: MousePattern {
+        MousePattern(
+            id: "builtin.discreet", name: L10n.patternDiscreet, anchor: .cursor,
+            points: [
+                PatternPoint(x: 0.502, y: 0.5, duration: 0.12),
+                PatternPoint(x: 0.502, y: 0.503, duration: 0.12),
+                PatternPoint(x: 0.499, y: 0.502, duration: 0.12),
+                PatternPoint(x: 0.5, y: 0.5, duration: 0.12),
+            ])
+    }
 
     /// Un tour d'ecran en cercle autour du centre, sans clic.
-    public static let circle = MousePattern(
-        id: "builtin.circle", name: "Cercle", points: circlePoints(count: 16, radius: 0.3))
+    public static var circle: MousePattern {
+        MousePattern(id: "builtin.circle", name: L10n.patternCircle, points: circlePoints(count: 16, radius: 0.3))
+    }
 
     /// Balayage en zigzag de gauche a droite, sans clic.
-    public static let zigzag = MousePattern(
-        id: "builtin.zigzag", name: "Zigzag",
-        points: stride(from: 0, through: 6, by: 1).map { step in
-            PatternPoint(x: 0.1 + Double(step) * 0.8 / 6, y: step.isMultiple(of: 2) ? 0.3 : 0.7,
-                         pause: PauseRange(min: 0.02, max: 0.1))
-        } + [PatternPoint(x: 0.5, y: 0.5)])
+    public static var zigzag: MousePattern {
+        MousePattern(
+            id: "builtin.zigzag", name: L10n.patternZigzag,
+            points: stride(from: 0, through: 6, by: 1).map { step in
+                PatternPoint(x: 0.1 + Double(step) * 0.8 / 6, y: step.isMultiple(of: 2) ? 0.3 : 0.7,
+                             pause: PauseRange(min: 0.02, max: 0.1))
+            } + [PatternPoint(x: 0.5, y: 0.5)])
+    }
 
-    public static let builtIns: [MousePattern] = [classic, discreet, circle, zigzag]
+    /// Computed so that names follow the current language.
+    public static var builtIns: [MousePattern] { [classic, discreet, circle, zigzag] }
 
     private static func circlePoints(count: Int, radius: Double) -> [PatternPoint] {
         (0...count).map { step in

@@ -14,6 +14,7 @@ struct MouseMoverApp: App {
         Self.terminateIfAlreadyRunning()
 
         let controller = MouseMoverController.shared
+        controller.applyLanguageChoice()
         controller.startTimer()
         controller.onPatternsChanged = { MouseMoverShortcuts.updateAppShortcutParameters() }
         MouseMoverShortcuts.updateAppShortcutParameters()

@@ -39,8 +39,13 @@ final class DisplayTests: XCTestCase {
     }
 
     func testLabels() {
-        XCTAssertEqual(DisplayCatalog.label(for: Fixtures.main, index: 3), "Écran 3 — 3200x1800 (principal)")
-        XCTAssertEqual(DisplayCatalog.label(for: Fixtures.left, index: 1), "Écran 1 — 2560x1440")
+        withLanguage(.fr) {
+            XCTAssertEqual(DisplayCatalog.label(for: Fixtures.main, index: 3), "Écran 3 — 3200x1800 (principal)")
+            XCTAssertEqual(DisplayCatalog.label(for: Fixtures.left, index: 1), "Écran 1 — 2560x1440")
+        }
+        withLanguage(.en) {
+            XCTAssertEqual(DisplayCatalog.label(for: Fixtures.main, index: 3), "Display 3 — 3200x1800 (main)")
+        }
     }
 
     func testResolveSelectedMainFallbackAndEmpty() {

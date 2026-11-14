@@ -97,9 +97,7 @@ public enum DisplayCatalog {
 
     /// `index` est la position (1, 2, 3...) dans la liste triee de gauche a droite.
     public static func label(for display: DisplayInfo, index: Int) -> String {
-        var label = "Écran \(index) — \(display.width)x\(display.height)"
-        if display.isMain { label += " (principal)" }
-        return label
+        L10n.displayLabel(index: index, width: display.width, height: display.height, isMain: display.isMain)
     }
 
     /// Ecran cible : celui choisi s'il existe encore, sinon l'ecran principal. `nil` si aucun ecran actif.

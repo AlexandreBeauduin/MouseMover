@@ -33,7 +33,7 @@ public enum GestureRecorder {
     }
 
     public static func pattern(from samples: [GestureSample], in bounds: DisplayBounds,
-                               name: String = "Geste enregistré") -> MousePattern? {
+                               name: String = L10n.recordedGesture) -> MousePattern? {
         var nodes = group(samples, in: bounds)
         guard !nodes.isEmpty else { return nil }
         // L'attente avant le premier mouvement et apres le dernier ne fait pas partie du geste.

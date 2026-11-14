@@ -1,0 +1,26 @@
+/* App Intents metadata (titles, descriptions, parameters, summaries). Source strings are in Intents.swift. */
+
+"Display" = "Écran";
+"Pattern" = "Motif";
+"Start MouseMover" = "Démarrer MouseMover";
+"Starts moving the mouse automatically." = "Démarre le mouvement automatique de la souris.";
+"Stop MouseMover" = "Arrêter MouseMover";
+"Pauses the automatic mouse movement." = "Met en pause le mouvement automatique de la souris.";
+"Run MouseMover Now" = "Exécuter MouseMover maintenant";
+"Runs a mouse activity cycle right away." = "Lance immédiatement un cycle d'activité de la souris.";
+"Set MouseMover Interval" = "Régler l'intervalle de MouseMover";
+"Sets the time, in minutes, between two activities." = "Définit la durée, en minutes, entre deux activités.";
+"Minutes" = "Minutes";
+"Time between two activities, in minutes." = "Durée entre deux activités, en minutes.";
+"Set MouseMover interval to ${minutes} minutes" = "Régler l'intervalle de MouseMover sur ${minutes} minutes";
+"Choose MouseMover Display" = "Choisir l'écran de MouseMover";
+"Chooses the display on which the mouse moves." = "Choisit l'écran sur lequel la souris est déplacée.";
+"Use ${display} for MouseMover" = "Utiliser ${display} pour MouseMover";
+"Choose MouseMover Pattern" = "Choisir le motif de MouseMover";
+"Chooses the mouse movement played on each cycle." = "Choisit le mouvement de souris joué à chaque cycle.";
+"Use the ${pattern} pattern for MouseMover" = "Utiliser le motif ${pattern} pour MouseMover";
+"Start" = "Démarrer";
+"Stop" = "Arrêter";
+"Run Now" = "Exécuter maintenant";
+"Choose Display" = "Choisir l'écran";
+"Choose Pattern" = "Choisir le motif";

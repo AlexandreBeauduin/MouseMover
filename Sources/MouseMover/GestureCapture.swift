@@ -47,8 +47,8 @@ final class GestureCapture {
     private func step() {
         let elapsed = Date().timeIntervalSince(phaseStart)
         if elapsed < Self.countdown {
-            hud.update(recording: false, title: "Prépare ta souris… \(Int((Self.countdown - elapsed).rounded(.up)))",
-                       detail: "Échap pour annuler")
+            hud.update(recording: false, title: L10n.captureCountdown(Int((Self.countdown - elapsed).rounded(.up))),
+                       detail: L10n.escToCancel)
             return
         }
         let time = elapsed - Self.countdown
@@ -58,8 +58,8 @@ final class GestureCapture {
         }
         guard time < duration else { return finish() }
         samples.append(GestureSample(time: time, point: Self.cursor()))
-        hud.update(recording: true, title: "Enregistrement… \(Int((duration - time).rounded(.up))) s",
-                   detail: "Les clics sont réellement effectués · Échap pour terminer")
+        hud.update(recording: true, title: L10n.recording(Int((duration - time).rounded(.up))),
+                   detail: L10n.recordingDetail)
     }
 
     private func recordClick() {
@@ -81,7 +81,7 @@ final class GestureCapture {
         let display = displays.first { $0.bounds.contains(first) }
             ?? displays.first { $0.isMain } ?? displays.first
         let pattern = display.flatMap { GestureRecorder.pattern(from: samples, in: $0.bounds) }
-            ?? MousePattern(name: "Geste enregistré", points: [])
+            ?? MousePattern(name: L10n.recordedGesture, points: [])
         end(with: pattern)
     }
 

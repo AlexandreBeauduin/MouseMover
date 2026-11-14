@@ -1,0 +1,16 @@
+/* App Shortcuts phrases. Every phrase must contain ${applicationName}. Source strings are in Intents.swift. */
+
+"Start mouse movement with ${applicationName}" = "Start de muisbeweging met ${applicationName}";
+"Turn on mouse movement in ${applicationName}" = "Zet de muisbeweging van ${applicationName} aan";
+"Turn on ${applicationName}" = "Zet ${applicationName} aan";
+"Start ${applicationName}" = "Start ${applicationName}";
+"Stop mouse movement in ${applicationName}" = "Stop de muisbeweging van ${applicationName}";
+"Pause ${applicationName}" = "Pauzeer ${applicationName}";
+"Turn off ${applicationName}" = "Zet ${applicationName} uit";
+"Stop ${applicationName}" = "Stop ${applicationName}";
+"Run ${applicationName} now" = "Voer ${applicationName} nu uit";
+"Move the mouse with ${applicationName}" = "Beweeg de muis met ${applicationName}";
+"Use ${display} for ${applicationName}" = "Gebruik ${display} voor ${applicationName}";
+"Change the ${applicationName} display to ${display}" = "Wijzig het scherm van ${applicationName} naar ${display}";
+"Use the ${pattern} pattern with ${applicationName}" = "Gebruik het patroon ${pattern} met ${applicationName}";
+"Change the ${applicationName} pattern to ${pattern}" = "Wijzig het patroon van ${applicationName} naar ${pattern}";

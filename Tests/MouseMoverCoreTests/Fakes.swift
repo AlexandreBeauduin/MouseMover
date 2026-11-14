@@ -1,6 +1,14 @@
 import Foundation
 @testable import MouseMoverCore
 
+/// Runs `body` with the UI language forced, so string assertions do not depend on the machine.
+func withLanguage<T>(_ language: Language, _ body: () throws -> T) rethrows -> T {
+    let saved = L10n.language
+    defer { L10n.language = saved }
+    L10n.language = language
+    return try body()
+}
+
 final class FakeMouseDriver: MouseDriver {
     enum Event: Equatable {
         case move(Point, Double, Easing)

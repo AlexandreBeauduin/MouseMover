@@ -28,7 +28,7 @@ final class MousePatternTests: XCTestCase {
 
     func testMissingFieldsGetDefaults() throws {
         let pattern = try decode(#"{"id": "a", "points": [{"x": 0.5, "y": 0.5}]}"#)
-        XCTAssertEqual(pattern.name, "Motif")
+        XCTAssertEqual(pattern.name, L10n.defaultPatternName)
         XCTAssertEqual(pattern.anchor, .screen)
         XCTAssertFalse(pattern.shuffle)
         XCTAssertEqual(pattern.points, [PatternPoint(x: 0.5, y: 0.5)])
@@ -47,7 +47,7 @@ final class MousePatternTests: XCTestCase {
           {"x": 0.5, "y": 0.5, "duration": 0.0001, "pause_max": 0.4}
         ]}
         """#)
-        XCTAssertEqual(pattern.name, "Motif sans nom")
+        XCTAssertEqual(pattern.name, L10n.untitledPattern)
         XCTAssertEqual(pattern.points[0].x, 0)
         XCTAssertEqual(pattern.points[0].y, 1)
         XCTAssertEqual(pattern.points[0].duration, MousePattern.durationRange.upperBound)

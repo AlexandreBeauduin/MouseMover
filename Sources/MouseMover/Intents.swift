@@ -1,10 +1,10 @@
 import AppIntents
 import MouseMoverCore
 
-// MARK: - Entite « Écran »
+// MARK: - Display entity
 
 struct DisplayEntity: AppEntity {
-    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Écran"
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Display"
     static let defaultQuery = DisplayEntityQuery()
 
     static let autoID = "auto"
@@ -21,7 +21,7 @@ struct DisplayEntity: AppEntity {
     }
 
     static var auto: DisplayEntity {
-        DisplayEntity(id: autoID, name: "Écran principal (auto)")
+        DisplayEntity(id: autoID, name: L10n.mainDisplayAuto)
     }
 }
 
@@ -47,10 +47,10 @@ struct DisplayEntityQuery: EntityQuery {
     }
 }
 
-// MARK: - Entite « Motif »
+// MARK: - Pattern entity
 
 struct PatternEntity: AppEntity {
-    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Motif"
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Pattern"
     static let defaultQuery = PatternEntityQuery()
 
     let id: String
@@ -88,50 +88,48 @@ struct PatternEntityQuery: EntityStringQuery {
 // MARK: - Intents
 
 struct StartMouseMoverIntent: AppIntent {
-    static let title: LocalizedStringResource = "Démarrer MouseMover"
-    static let description = IntentDescription("Démarre le mouvement automatique de la souris.")
+    static let title: LocalizedStringResource = "Start MouseMover"
+    static let description = IntentDescription("Starts moving the mouse automatically.")
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         MouseMoverController.shared.start()
-        return .result(dialog: "MouseMover est démarré.")
+        return .result(dialog: "\(L10n.startedDialog)")
     }
 }
 
 struct StopMouseMoverIntent: AppIntent {
-    static let title: LocalizedStringResource = "Arrêter MouseMover"
-    static let description = IntentDescription("Met en pause le mouvement automatique de la souris.")
+    static let title: LocalizedStringResource = "Stop MouseMover"
+    static let description = IntentDescription("Pauses the automatic mouse movement.")
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         MouseMoverController.shared.stop()
-        return .result(dialog: "MouseMover est en pause.")
+        return .result(dialog: "\(L10n.stoppedDialog)")
     }
 }
 
 struct RunNowIntent: AppIntent {
-    static let title: LocalizedStringResource = "Exécuter MouseMover maintenant"
-    static let description = IntentDescription("Lance immédiatement un cycle d'activité de la souris.")
+    static let title: LocalizedStringResource = "Run MouseMover Now"
+    static let description = IntentDescription("Runs a mouse activity cycle right away.")
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let started = MouseMoverController.shared.runNow()
-        return .result(dialog: started
-            ? "Cycle lancé."
-            : "Un cycle est déjà en cours.")
+        return .result(dialog: "\(started ? L10n.cycleStarted : L10n.cycleAlreadyRunning)")
     }
 }
 
 struct SetIntervalIntent: AppIntent {
-    static let title: LocalizedStringResource = "Régler l'intervalle de MouseMover"
-    static let description = IntentDescription("Définit la durée, en minutes, entre deux activités.")
+    static let title: LocalizedStringResource = "Set MouseMover Interval"
+    static let description = IntentDescription("Sets the time, in minutes, between two activities.")
 
-    @Parameter(title: "Minutes", description: "Durée entre deux activités, en minutes.", default: 5,
+    @Parameter(title: "Minutes", description: "Time between two activities, in minutes.", default: 5,
                controlStyle: .field)
     var minutes: Double
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Régler l'intervalle de MouseMover sur \(\.$minutes) minutes")
+        Summary("Set MouseMover interval to \(\.$minutes) minutes")
     }
 
     @MainActor
@@ -139,7 +137,7 @@ struct SetIntervalIntent: AppIntent {
         guard MouseMoverController.shared.setCustomInterval(minutesText: String(minutes)) else {
             throw IntentError.invalidMinutes
         }
-        return .result(dialog: "Intervalle réglé sur \(Self.format(minutes)) minutes.")
+        return .result(dialog: "\(L10n.intervalSet(Self.format(minutes)))")
     }
 
     private static func format(_ minutes: Double) -> String {
@@ -148,32 +146,32 @@ struct SetIntervalIntent: AppIntent {
 }
 
 struct SetDisplayIntent: AppIntent {
-    static let title: LocalizedStringResource = "Choisir l'écran de MouseMover"
-    static let description = IntentDescription("Choisit l'écran sur lequel la souris est déplacée.")
+    static let title: LocalizedStringResource = "Choose MouseMover Display"
+    static let description = IntentDescription("Chooses the display on which the mouse moves.")
 
-    @Parameter(title: "Écran")
+    @Parameter(title: "Display")
     var display: DisplayEntity
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Utiliser \(\.$display) pour MouseMover")
+        Summary("Use \(\.$display) for MouseMover")
     }
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         MouseMoverController.shared.selectDisplay(display.displayID)
-        return .result(dialog: "MouseMover utilise maintenant « \(display.name) ».")
+        return .result(dialog: "\(L10n.displaySet(display.name))")
     }
 }
 
 struct SetPatternIntent: AppIntent {
-    static let title: LocalizedStringResource = "Choisir le motif de MouseMover"
-    static let description = IntentDescription("Choisit le mouvement de souris joué à chaque cycle.")
+    static let title: LocalizedStringResource = "Choose MouseMover Pattern"
+    static let description = IntentDescription("Chooses the mouse movement played on each cycle.")
 
-    @Parameter(title: "Motif")
+    @Parameter(title: "Pattern")
     var pattern: PatternEntity
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Utiliser le motif \(\.$pattern) pour MouseMover")
+        Summary("Use the \(\.$pattern) pattern for MouseMover")
     }
 
     @MainActor
@@ -181,7 +179,7 @@ struct SetPatternIntent: AppIntent {
         guard MouseMoverController.shared.usePattern(pattern.id) else {
             throw IntentError.unknownPattern
         }
-        return .result(dialog: "MouseMover joue maintenant le motif « \(pattern.name) ».")
+        return .result(dialog: "\(L10n.patternSet(pattern.name))")
     }
 }
 
@@ -191,64 +189,68 @@ enum IntentError: Error, CustomLocalizedStringResourceConvertible {
 
     var localizedStringResource: LocalizedStringResource {
         switch self {
-        case .invalidMinutes: "Entre un nombre de minutes supérieur à 0."
-        case .unknownPattern: "Ce motif n'existe plus."
+        case .invalidMinutes: "\(L10n.invalidMinutes)"
+        case .unknownPattern: "\(L10n.unknownPattern)"
         }
     }
 }
 
-// MARK: - Phrases Siri
+// MARK: - App Shortcuts
+//
+// English is the source language. Translations of every static string above (titles, descriptions,
+// parameters, summaries) are in *.lproj/Localizable.strings, and of the phrases below in
+// *.lproj/AppShortcuts.strings. Runtime dialogs use L10n, like the rest of the app.
 
 struct MouseMoverShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: StartMouseMoverIntent(),
             phrases: [
-                // Pas de « Lance » / « Ouvre » : Siri les prend pour « ouvrir l'application ».
-                "Démarre le mouvement de souris avec \(.applicationName)",
-                "Active le mouvement de souris de \(.applicationName)",
-                "Mets \(.applicationName) en marche",
-                "Démarre \(.applicationName)",
+                // Avoid "Open" / "Launch": Siri takes them as "open the app".
+                "Start mouse movement with \(.applicationName)",
+                "Turn on mouse movement in \(.applicationName)",
+                "Turn on \(.applicationName)",
+                "Start \(.applicationName)",
             ],
-            shortTitle: "Démarrer",
+            shortTitle: "Start",
             systemImageName: "play.fill")
 
         AppShortcut(
             intent: StopMouseMoverIntent(),
             phrases: [
-                "Arrête le mouvement de souris de \(.applicationName)",
-                "Mets \(.applicationName) en pause",
-                "Désactive \(.applicationName)",
-                "Arrête \(.applicationName)",
+                "Stop mouse movement in \(.applicationName)",
+                "Pause \(.applicationName)",
+                "Turn off \(.applicationName)",
+                "Stop \(.applicationName)",
             ],
-            shortTitle: "Arrêter",
+            shortTitle: "Stop",
             systemImageName: "pause.fill")
 
         AppShortcut(
             intent: RunNowIntent(),
             phrases: [
-                "Exécute \(.applicationName) maintenant",
-                "Bouge la souris avec \(.applicationName)",
+                "Run \(.applicationName) now",
+                "Move the mouse with \(.applicationName)",
             ],
-            shortTitle: "Exécuter maintenant",
+            shortTitle: "Run Now",
             systemImageName: "cursorarrow.motionlines")
 
         AppShortcut(
             intent: SetDisplayIntent(),
             phrases: [
-                "Utilise \(\.$display) pour \(.applicationName)",
-                "Change l'écran de \(.applicationName) pour \(\.$display)",
+                "Use \(\.$display) for \(.applicationName)",
+                "Change the \(.applicationName) display to \(\.$display)",
             ],
-            shortTitle: "Choisir l'écran",
+            shortTitle: "Choose Display",
             systemImageName: "display")
 
         AppShortcut(
             intent: SetPatternIntent(),
             phrases: [
-                "Utilise le motif \(\.$pattern) avec \(.applicationName)",
-                "Change le motif de \(.applicationName) pour \(\.$pattern)",
+                "Use the \(\.$pattern) pattern with \(.applicationName)",
+                "Change the \(.applicationName) pattern to \(\.$pattern)",
             ],
-            shortTitle: "Choisir le motif",
+            shortTitle: "Choose Pattern",
             systemImageName: "scribble.variable")
     }
 }

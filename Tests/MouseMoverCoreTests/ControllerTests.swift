@@ -42,8 +42,11 @@ final class ControllerTests: XCTestCase {
         XCTAssertEqual(c.interval, 300)
         XCTAssertEqual(c.remaining, 300)
         XCTAssertNil(c.selectedDisplayID)
-        XCTAssertEqual(c.statusTitle, "🖱 pause")
-        XCTAssertEqual(c.startStopTitle, "Démarrer")
+        withLanguage(.fr) {
+            XCTAssertEqual(c.statusTitle, "🖱 pause")
+            XCTAssertEqual(c.startStopTitle, "Démarrer")
+        }
+        withLanguage(.en) { XCTAssertEqual(c.startStopTitle, "Start") }
         XCTAssertFalse(c.isBusy)
     }
 
@@ -51,7 +54,7 @@ final class ControllerTests: XCTestCase {
         let c = makeController(config: MouseMoverConfig(intervalSeconds: 125))
         c.start()
         XCTAssertEqual(c.statusTitle, "🖱 02:05")
-        XCTAssertEqual(c.startStopTitle, "Arrêter")
+        withLanguage(.fr) { XCTAssertEqual(c.startStopTitle, "Arrêter") }
         tick(c, 5)
         XCTAssertEqual(c.statusTitle, "🖱 02:00")
     }
