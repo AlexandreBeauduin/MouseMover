@@ -1,0 +1,41 @@
+name: Bug report / Signaler un bug
+description: Something does not work / Quelque chose ne marche pas
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Que s'est-il passé ?
+      description: Steps, expected vs actual / Étapes, attendu vs obtenu
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "27.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: mac
+    attributes:
+      label: Mac
+      options: [Apple Silicon, Intel]
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Displays and pattern / Écrans et motif
+      description: Number of displays, pattern used (built-in or your own) / Nombre d'écrans, motif utilisé (intégré ou personnel)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional) / Journaux (facultatif)
+      description: "`log show --last 10m --predicate 'subsystem == \"io.github.alexandrebeauduin.MouseMover\"'`"
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: MouseMover version
+      placeholder: "2.0.0"

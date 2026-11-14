@@ -1,0 +1,40 @@
+name: Release
+
+# Push a tag matching MARKETING_VERSION in project.yml, e.g.:
+#   git tag v2.0.0 && git push origin v2.0.0
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Tests
+        run: scripts/test.sh
+      - name: Build and package
+        run: scripts/release.sh
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[?" v "\\]?" { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "MouseMover $version" > notes.md
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "build/MouseMover-${GITHUB_REF_NAME#v}.zip" \
+            "build/MouseMover-${GITHUB_REF_NAME#v}.zip.sha256" \
+            --title "MouseMover ${GITHUB_REF_NAME#v}" \
+            --notes-file notes.md
