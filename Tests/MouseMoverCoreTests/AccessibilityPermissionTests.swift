@@ -2,10 +2,10 @@ import XCTest
 @testable import MouseMoverCore
 
 final class AccessibilityPermissionTests: XCTestCase {
-    private var defaults: UserDefaults!
+    private var defaults: InMemoryDefaults!
 
     override func setUp() {
-        defaults = UserDefaults(suiteName: "MouseMoverTests-\(UUID().uuidString)")
+        defaults = InMemoryDefaults()
     }
 
     func testPromptsOnlyOnceWhenNotTrusted() {

@@ -27,7 +27,7 @@ Sources/
     Intents                  App Intents: acties, entiteiten, App Shortcuts
     {fr,nl,de}.lproj         vertalingen van de App Intents-metadata
 Tests/MouseMoverCoreTests/   XCTest-unittests met nepmuis, nepschermen, nepwillekeur
-scripts/                     test.sh, build-app.sh [--install], verify_bundle.sh, release.sh
+scripts/                     test.sh, build-app.sh [--install], verify_bundle.sh, release.sh, forget-build-copies.sh
 .github/workflows/           ci.yml (tests + build bij elke push), release.yml (publicatie bij tag v*)
 ```
 

@@ -15,6 +15,7 @@ rm -rf "$APP"
 ditto build/DerivedData/Build/Products/Release/MouseMover.app "$APP"
 scripts/verify_bundle.sh "$APP"
 echo "OK: $APP ($(lipo -archs "$APP/Contents/MacOS/MouseMover"))"
+scripts/forget-build-copies.sh
 
 if [[ "${1:-}" == "--install" ]]; then
   pkill -x MouseMover 2>/dev/null || true

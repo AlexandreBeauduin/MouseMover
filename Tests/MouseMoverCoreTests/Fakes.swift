@@ -9,6 +9,23 @@ func withLanguage<T>(_ language: Language, _ body: () throws -> T) rethrows -> T
     return try body()
 }
 
+/// UserDefaults that never touches the disk. A real suite, even removed with
+/// `removePersistentDomain`, leaves an empty plist in ~/Library/Preferences on every run.
+final class InMemoryDefaults: UserDefaults, @unchecked Sendable {
+    private var storage: [String: Any] = [:]
+
+    init() {
+        super.init(suiteName: nil)!
+    }
+
+    override func object(forKey defaultName: String) -> Any? { storage[defaultName] }
+    override func set(_ value: Any?, forKey defaultName: String) { storage[defaultName] = value }
+    override func set(_ value: Bool, forKey defaultName: String) { storage[defaultName] = value }
+    override func removeObject(forKey defaultName: String) { storage[defaultName] = nil }
+    override func bool(forKey defaultName: String) -> Bool { storage[defaultName] as? Bool ?? false }
+    override func string(forKey defaultName: String) -> String? { storage[defaultName] as? String }
+}
+
 final class FakeMouseDriver: MouseDriver {
     enum Event: Equatable {
         case move(Point, Double, Easing)

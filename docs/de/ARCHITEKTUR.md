@@ -27,7 +27,7 @@ Sources/
     Intents                  App Intents: Aktionen, Entitäten, App Shortcuts
     {fr,nl,de}.lproj         Übersetzungen der App-Intents-Metadaten
 Tests/MouseMoverCoreTests/   XCTest-Unit-Tests mit Fake-Maus, Fake-Bildschirmen, Fake-Zufall
-scripts/                     test.sh, build-app.sh [--install], verify_bundle.sh, release.sh
+scripts/                     test.sh, build-app.sh [--install], verify_bundle.sh, release.sh, forget-build-copies.sh
 .github/workflows/           ci.yml (Tests + Build bei jedem Push), release.yml (Veröffentlichung bei Tag v*)
 ```
 

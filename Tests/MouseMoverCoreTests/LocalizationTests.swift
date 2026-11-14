@@ -62,9 +62,7 @@ final class LocalizationTests: XCTestCase {
     }
 
     func testControllerPersistsAndAppliesLanguageChoice() throws {
-        let suite = "MouseMoverTests-\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
+        let defaults = InMemoryDefaults()
         let url = Fixtures.tempURL()
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         let make = {
